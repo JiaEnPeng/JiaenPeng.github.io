@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT">
+  <meta name="keywords" content="openstack,">
 
 
 
@@ -79,14 +79,18 @@
 
 
 
-<meta name="keywords" content="jiaen,pengjiaen,家恩,彭家恩,弈心">
-<meta property="og:type" content="website">
-<meta property="og:title" content="弈心">
-<meta property="og:url" content="http://yoursite.com/index.html">
+<meta name="description" content="需求介绍项目进行到最后时刻，遇到了个需求，有一部分位于云主机上的业务系统需要使Ukey激活才能使用，因此，需要将服务器上的USB设备重定向到云主机上。 需求分析要将服务器上的USB设备重定向到云主机上，需要实现如下步骤：  需要获取服务器的USB设备列表。很显然，通过lsusb命令可以很轻松的取到服务上面所有的USB设备。该命令输出示例如下：12345678[root@localhost ~]#">
+<meta name="keywords" content="openstack">
+<meta property="og:type" content="article">
+<meta property="og:title" content="openstack之USB重定向实现">
+<meta property="og:url" content="http://yoursite.com/2018/10/31/openstack之USB重定向实现/index.html">
 <meta property="og:site_name" content="弈心">
+<meta property="og:description" content="需求介绍项目进行到最后时刻，遇到了个需求，有一部分位于云主机上的业务系统需要使Ukey激活才能使用，因此，需要将服务器上的USB设备重定向到云主机上。 需求分析要将服务器上的USB设备重定向到云主机上，需要实现如下步骤：  需要获取服务器的USB设备列表。很显然，通过lsusb命令可以很轻松的取到服务上面所有的USB设备。该命令输出示例如下：12345678[root@localhost ~]#">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:updated_time" content="2018-10-31T07:03:03.301Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="弈心">
+<meta name="twitter:title" content="openstack之USB重定向实现">
+<meta name="twitter:description" content="需求介绍项目进行到最后时刻，遇到了个需求，有一部分位于云主机上的业务系统需要使Ukey激活才能使用，因此，需要将服务器上的USB设备重定向到云主机上。 需求分析要将服务器上的USB设备重定向到云主机上，需要实现如下步骤：  需要获取服务器的USB设备列表。很显然，通过lsusb命令可以很轻松的取到服务上面所有的USB设备。该命令输出示例如下：12345678[root@localhost ~]#">
 
 
 
@@ -116,13 +120,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/">
+  <link rel="canonical" href="http://yoursite.com/2018/10/31/openstack之USB重定向实现/">
 
 
 
 
 
-  <title>弈心</title>
+  <title>openstack之USB重定向实现 | 弈心</title>
   
 
 
@@ -141,8 +145,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -215,9 +218,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -247,9 +250,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/10/31/openstack之USB重定向实现/" itemprop="url">openstack之USB重定向实现</a></h1>
+          <h1 class="post-title" itemprop="name headline">openstack之USB重定向实现</h1>
         
 
         <div class="post-meta">
@@ -299,9 +300,7 @@
       
 
       
-        
-          
-            <h2 id="需求介绍"><a href="#需求介绍" class="headerlink" title="需求介绍"></a>需求介绍</h2><p>项目进行到最后时刻，遇到了个需求，有一部分位于云主机上的业务系统需要使Ukey激活才能使用，因此，需要将服务器上的USB设备重定向到云主机上。</p>
+        <h2 id="需求介绍"><a href="#需求介绍" class="headerlink" title="需求介绍"></a>需求介绍</h2><p>项目进行到最后时刻，遇到了个需求，有一部分位于云主机上的业务系统需要使Ukey激活才能使用，因此，需要将服务器上的USB设备重定向到云主机上。</p>
 <h2 id="需求分析"><a href="#需求分析" class="headerlink" title="需求分析"></a>需求分析</h2><p>要将服务器上的USB设备重定向到云主机上，需要实现如下步骤：</p>
 <ol>
 <li>需要获取服务器的USB设备列表。很显然，通过lsusb命令可以很轻松的取到服务上面所有的USB设备。该命令输出示例如下：<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]<span class="comment"># lsusb</span></span><br><span class="line">Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub</span><br><span class="line">Bus 001 Device 005: ID 1604:10c0 Tascam </span><br><span class="line">Bus 001 Device 004: ID 1604:10c0 Tascam </span><br><span class="line">Bus 001 Device 003: ID 1604:10c0 Tascam </span><br><span class="line">Bus 001 Device 002: ID 0bda:0301 Realtek Semiconductor Corp. multicard reader</span><br><span class="line">Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub</span><br><span class="line">[root@localhost ~]<span class="comment">#</span></span><br></pre></td></tr></table></figure>
@@ -340,8 +339,6 @@
 <li>当拔出原本已重定向到云主机上的USB设备时，再次插入不会重定向到该云主机中了。<br>以上问，待进一步优化。</li>
 </ol>
 
-          
-        
       
     </div>
     
@@ -356,14 +353,20 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/openstack/" rel="tag"># openstack</a>
+          
+        </div>
+      
+
+      
+      
+      
 
       
 
       
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </div>
@@ -373,10 +376,11 @@
   </article>
 
 
-    
-  </section>
 
-  
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -384,6 +388,10 @@
 
 
           
+
+  
+
+
 
         </div>
         
@@ -404,8 +412,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -456,6 +473,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#需求介绍"><span class="nav-number">1.</span> <span class="nav-text">需求介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#需求分析"><span class="nav-number">2.</span> <span class="nav-text">需求分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#需求实现"><span class="nav-number">3.</span> <span class="nav-text">需求实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#云主机xml配置生成过程分析"><span class="nav-number">3.1.</span> <span class="nav-text">云主机xml配置生成过程分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#云主机USB设备重定向配置的代码实现"><span class="nav-number">3.2.</span> <span class="nav-text">云主机USB设备重定向配置的代码实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#生成USB设重定向的xml配置文件"><span class="nav-number">3.2.1.</span> <span class="nav-text">生成USB设重定向的xml配置文件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#验证结果"><span class="nav-number">4.</span> <span class="nav-text">验证结果</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#粗略验证"><span class="nav-number">4.1.</span> <span class="nav-text">粗略验证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#细心分析"><span class="nav-number">4.2.</span> <span class="nav-text">细心分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#遗留问题"><span class="nav-number">5.</span> <span class="nav-text">遗留问题</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -589,6 +622,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
