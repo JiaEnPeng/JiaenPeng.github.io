@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,Centos7,Kernel,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景介绍在使用Linux的过程中，经常遇到需要添加或者去除一些功能，此时需要修改内核配置，甚至升级整个内核。下面，针对Centos7，演示手动编译内核并安装的整过过程。 编译前的准备工作下载Centos7的官方内核源码包http://vault.centos.org/7.4.1708/updates/Source/SPackages/kernel-3.10.0-693.11.1.el7.src.r">
+<meta name="keywords" content="Linux,Centos7,Kernel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="手动编译Centos7内核">
+<meta property="og:url" content="http://yoursite.com/2017/12/22/手动编译Centos7内核/index.html">
+<meta property="og:site_name" content="弈心">
+<meta property="og:description" content="背景介绍在使用Linux的过程中，经常遇到需要添加或者去除一些功能，此时需要修改内核配置，甚至升级整个内核。下面，针对Centos7，演示手动编译内核并安装的整过过程。 编译前的准备工作下载Centos7的官方内核源码包http://vault.centos.org/7.4.1708/updates/Source/SPackages/kernel-3.10.0-693.11.1.el7.src.r">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:updated_time" content="2018-10-31T07:07:58.576Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="手动编译Centos7内核">
+<meta name="twitter:description" content="背景介绍在使用Linux的过程中，经常遇到需要添加或者去除一些功能，此时需要修改内核配置，甚至升级整个内核。下面，针对Centos7，演示手动编译内核并安装的整过过程。 编译前的准备工作下载Centos7的官方内核源码包http://vault.centos.org/7.4.1708/updates/Source/SPackages/kernel-3.10.0-693.11.1.el7.src.r">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/12/22/手动编译Centos7内核/">
+
+
+
+
+
+  <title>手动编译Centos7内核 | 弈心</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">弈心</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">个人博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/22/手动编译Centos7内核/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="弈心">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="弈心">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">手动编译Centos7内核</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-12-22T15:28:05+08:00">
+                2017-12-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="背景介绍"><a href="#背景介绍" class="headerlink" title="背景介绍"></a>背景介绍</h2><p>在使用Linux的过程中，经常遇到需要添加或者去除一些功能，此时需要修改内核配置，甚至升级整个内核。下面，针对Centos7，演示手动编译内核并安装的整过过程。</p>
+<h2 id="编译前的准备工作"><a href="#编译前的准备工作" class="headerlink" title="编译前的准备工作"></a>编译前的准备工作</h2><h3 id="下载Centos7的官方内核源码包"><a href="#下载Centos7的官方内核源码包" class="headerlink" title="下载Centos7的官方内核源码包"></a>下载Centos7的官方内核源码包</h3><p><a href="http://vault.centos.org/7.4.1708/updates/Source/SPackages/kernel-3.10.0-693.11.1.el7.src.rpm" target="_blank" rel="noopener">http://vault.centos.org/7.4.1708/updates/Source/SPackages/kernel-3.10.0-693.11.1.el7.src.rpm</a></p>
+<h3 id="安装编译所依赖的包"><a href="#安装编译所依赖的包" class="headerlink" title="安装编译所依赖的包"></a>安装编译所依赖的包</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# yum groupinstall "Development Tools"</span><br><span class="line">[root@JeanP ~]# yum install ncurses-devel</span><br><span class="line">[root@JeanP ~]# yum install hmaccalc zlib-devel binutils-devel elfutils-libelf-devel</span><br><span class="line">[root@JeanP ~]#</span><br></pre></td></tr></table></figure>
+<h3 id="安装之前下载好的内核源码包"><a href="#安装之前下载好的内核源码包" class="headerlink" title="安装之前下载好的内核源码包"></a>安装之前下载好的内核源码包</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# rpm -ivh ~/kernel-3.10.0-693.11.1.el7.src.rpm</span><br></pre></td></tr></table></figure>
+<p>此时，在~/rpmbuild/SOURCES目录下，可以看到内核相关源码了。</p>
+<h2 id="配置、修改内核"><a href="#配置、修改内核" class="headerlink" title="配置、修改内核"></a>配置、修改内核</h2><h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>执行~/rpmbuild/SPECS/kernel.spec文件中的%pre部分的工作（解压源码并打补丁）。<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# rpmbuild -bp ~/rpmbuild/SPECS/kernel.spec</span><br></pre></td></tr></table></figure></p>
+<h3 id="配置内核"><a href="#配置内核" class="headerlink" title="配置内核"></a>配置内核</h3><p>进入解压之后的内核源码目录（~/rpmbuild/BUILD/）<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# cd ~/rpmbuild/BUILD/kernel-*/linux-*/</span><br></pre></td></tr></table></figure></p>
+<p>拷贝平台默认的配置文件到内核源码的顶级目录：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# cp configs/kernel-3.10.0-`uname -m`.config .config</span><br></pre></td></tr></table></figure></p>
+<h3 id="修改内核配置"><a href="#修改内核配置" class="headerlink" title="修改内核配置"></a>修改内核配置</h3><p>执行make oldconfig命令<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# make oldconfig</span><br></pre></td></tr></table></figure></p>
+<p>此时，默认的内核配置已经生成，接下来可以进行自定义配置了，执行make menuconfig<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# make menuconfig</span><br></pre></td></tr></table></figure></p>
+<p>在make menuconfig修改完配置退出时，记得保存配置。<br><strong>重要：修改.config文件，在文件第一行添加如下一行(针对x86_64，其他平台可运行‘uname -m’命令查看平台的体系结构)</strong><br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> x86_64</span></span><br></pre></td></tr></table></figure></p>
+<p>前面的#号不可少。<br>将修改后的配置文件保存<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# cp .config configs/kernel-3.10.0-`uname -m`.config</span><br><span class="line">[root@JeanP ~]# cp configs/* ~/rpmbuild/SOURCES/</span><br></pre></td></tr></table></figure></p>
+<h2 id="内核编译"><a href="#内核编译" class="headerlink" title="内核编译"></a>内核编译</h2><p><strong> 内核的 ABI </strong><br>CentOS 内核的其中一个特色就是它的应用程序二进制界面（ABI）会在整个产品生效期内保持一样。ABI 维持不变的好处，就是外置的内核模块在创建时不必与内核版本挂钩 —— 因此它们不必在新内核发行时被重新创建。这是追踪 ABI 内核模块组件的基础 —— 它们可以提供更新的驱动程序及其它文件系统等支持。</p>
+<p>为了维系 ABI 的一致性，原先的内核的 ABI 会被记录及存储在一个文件内。这个文件会在创建每个新内核时用来检查 kABI。如果新的内核被设置或修改至一个地步令它的 ABI 与先前的有差别，编译将会失败，并且会有信息表示 kABI 的一致性已被破坏。这时，内核创建者有两个选择：（一）重新设置新的内核，让它的 ABI 与原有的能互相吻合，因而可继续享受一致 ABI 所提供的好处；（二）在创建的过程中停止检查 kABI。在这两个选择之间，前者较为可取，但有时后者是唯一可行的方法。</p>
+<p>要停止检查内核的 ABI，你只须在 rpmbuild 命令行上加入一个选项及它的参数：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--without kabichk</span><br></pre></td></tr></table></figure></p>
+<p>你可以通过 –with 及／或 –without 这些选项及相关的引数在 rpmbuild 指令内加入一些有用的选项。值得留意的主要选项包括：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">--with baseonly</span><br><span class="line">--without up</span><br><span class="line">--without debug</span><br><span class="line">--without debuginfo</span><br><span class="line">--without fips</span><br><span class="line">--without kabichk</span><br></pre></td></tr></table></figure></p>
+<p>默认编译，将编译所有的包，包括基本内核包，debug包以及debuginfo包。此过程需要花费数小时之久（视编译机器的配置决定），如果不需要debug已经debuginfo包，仅编译基本的内核包，请使用如下选项：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--with baseonly --without debug --without debuginfo</span><br></pre></td></tr></table></figure></p>
+<p>编译内核：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# rpmbuild -bb ~/rpmbuild/SPECS/kernel.spec --with baseonly --without debug --without debuginfo --without kabichk</span><br></pre></td></tr></table></figure></p>
+<p>待编译完成后，可以在~/rpmbuild/RPMS/<code>uname -m</code>/目录下看到编译好的内核安装包了。</p>
+<h2 id="安装新的内核"><a href="#安装新的内核" class="headerlink" title="安装新的内核"></a>安装新的内核</h2><p>进入安装包所在目录，运行下面的命令进行安装。待安装成功后，重启机器选择从新内核启动就可以了。<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# rpm -ivh kernel-*.rpm</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+            <a href="/tags/Centos7/" rel="tag"># Centos7</a>
+          
+            <a href="/tags/Kernel/" rel="tag"># Kernel</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/10/31/openstack之USB重定向实现/" rel="prev" title="openstack之USB重定向实现">
+                openstack之USB重定向实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">弈心</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景介绍"><span class="nav-number">1.</span> <span class="nav-text">背景介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译前的准备工作"><span class="nav-number">2.</span> <span class="nav-text">编译前的准备工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#下载Centos7的官方内核源码包"><span class="nav-number">2.1.</span> <span class="nav-text">下载Centos7的官方内核源码包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装编译所依赖的包"><span class="nav-number">2.2.</span> <span class="nav-text">安装编译所依赖的包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装之前下载好的内核源码包"><span class="nav-number">2.3.</span> <span class="nav-text">安装之前下载好的内核源码包</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置、修改内核"><span class="nav-number">3.</span> <span class="nav-text">配置、修改内核</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#准备工作"><span class="nav-number">3.1.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置内核"><span class="nav-number">3.2.</span> <span class="nav-text">配置内核</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改内核配置"><span class="nav-number">3.3.</span> <span class="nav-text">修改内核配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内核编译"><span class="nav-number">4.</span> <span class="nav-text">内核编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装新的内核"><span class="nav-number">5.</span> <span class="nav-text">安装新的内核</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">弈心</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
