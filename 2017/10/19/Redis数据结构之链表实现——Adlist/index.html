@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Redis,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="介绍在项目开发过程中，链表成为了不可或缺的一种数据结构，不同的项目有自己不同的实现方式。在Redis中，拥有了一套属于它自己的链表结构，其实现过程在源码的adlist.c和adlist.h文件中。接下来将分析它。 结构说明在adlist.h文件中，我们可以看到关于链表节点的声明，如下： 12345typedef struct listNode &amp;#123;    struct listNode *">
+<meta name="keywords" content="Redis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis数据结构之链表实现——Adlist">
+<meta property="og:url" content="http://yoursite.com/2017/10/19/Redis数据结构之链表实现——Adlist/index.html">
+<meta property="og:site_name" content="弈心">
+<meta property="og:description" content="介绍在项目开发过程中，链表成为了不可或缺的一种数据结构，不同的项目有自己不同的实现方式。在Redis中，拥有了一套属于它自己的链表结构，其实现过程在源码的adlist.c和adlist.h文件中。接下来将分析它。 结构说明在adlist.h文件中，我们可以看到关于链表节点的声明，如下： 12345typedef struct listNode &amp;#123;    struct listNode *">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:updated_time" content="2017-12-27T09:28:37.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis数据结构之链表实现——Adlist">
+<meta name="twitter:description" content="介绍在项目开发过程中，链表成为了不可或缺的一种数据结构，不同的项目有自己不同的实现方式。在Redis中，拥有了一套属于它自己的链表结构，其实现过程在源码的adlist.c和adlist.h文件中。接下来将分析它。 结构说明在adlist.h文件中，我们可以看到关于链表节点的声明，如下： 12345typedef struct listNode &amp;#123;    struct listNode *">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/10/19/Redis数据结构之链表实现——Adlist/">
+
+
+
+
+
+  <title>Redis数据结构之链表实现——Adlist | 弈心</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">弈心</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">个人博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/19/Redis数据结构之链表实现——Adlist/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="弈心">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="弈心">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Redis数据结构之链表实现——Adlist</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-19T11:22:28+08:00">
+                2017-10-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>在项目开发过程中，链表成为了不可或缺的一种数据结构，不同的项目有自己不同的实现方式。在Redis中，拥有了一套属于它自己的链表结构，其实现过程在源码的adlist.c和adlist.h文件中。接下来将分析它。</p>
+<h1 id="结构说明"><a href="#结构说明" class="headerlink" title="结构说明"></a>结构说明</h1><p>在adlist.h文件中，我们可以看到关于链表节点的声明，如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">prev</span>;</span> <span class="comment">/*指向前一个节点的指针*/</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">next</span>;</span> <span class="comment">/*指向后一个节点的指针*/</span></span><br><span class="line">    <span class="keyword">void</span> *value; <span class="comment">/*该节点所拥有的数据*/</span></span><br><span class="line">&#125; listNode;</span><br></pre></td></tr></table></figure>
+<p>由此结构体可知，每个链表节点都包含了一个指向前一个节点的指针和一个指向后一节点的指针，所以，其实现了一个双向链表。在adlist.h文件中，我们还可以看到关于链表的结构体声明，每一条链表，都对应一个该结构体，其原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">list</span> &#123;</span></span><br><span class="line">    listNode *head; <span class="comment">/*该链表的头结点*/</span></span><br><span class="line">    listNode *tail; <span class="comment">/*该链表的尾结点*/</span></span><br><span class="line">    <span class="keyword">void</span> *(*dup)(<span class="keyword">void</span> *ptr); <span class="comment">/*当进行链表复制时，对链表节点里面的数据进行复制的回调函数*/</span></span><br><span class="line">    <span class="keyword">void</span> (*<span class="built_in">free</span>)(<span class="keyword">void</span> *ptr); <span class="comment">/*当进行链表节点的删除操作时，对节点里面的数据进行回收的回调函数*/</span></span><br><span class="line">    <span class="keyword">int</span> (*match)(<span class="keyword">void</span> *ptr, <span class="keyword">void</span> *key); <span class="comment">/*当进行比较时，节点里面的数据进行比较的回调函数*/</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> len; <span class="comment">/*此链表的长度，即拥有的节点数量*/</span></span><br><span class="line">&#125; <span class="built_in">list</span>;</span><br></pre></td></tr></table></figure>
+<p>由此可知，当使用链表时，为每一个链表开辟一个该结构体空间，用来维护改链表的一系列操作。</p>
+<h1 id="链表的创建、添加、查找、删除"><a href="#链表的创建、添加、查找、删除" class="headerlink" title="链表的创建、添加、查找、删除"></a>链表的创建、添加、查找、删除</h1><p>众所周知，一个完整的链表实现必须要满足创建、添加、查找和删除等操作，在Redis<br>中，同样不例外的实现了创建、添加、查找与删除等接口，分别如下：</p>
+<ol>
+<li><p>创建</p>
+<p> <code>list *listCreate(void);</code><br> 通过调用该接口，可以获得一个空链表，此时链表的头节点和尾节点都置为空。</p>
+</li>
+<li><p>添加<br> <code>list *listAddNodeHead(list *list, void *value);</code><br> <code>list *listAddNodeTail(list *list, void *value);</code><br> <code>list *listInsertNode(list *list, listNode *old_node, void *value, int after);</code><br> Redis的链表支持从头部和尾部两种方式添加节点，当从头部添加节点时，新添加的节点将成为链表的头结点，之前的头结点将成为新节点的下一个节点；当从尾部添加节点时，新添加的节点将成为链表的尾节点，之前的尾节点将成为新节点的上一个节点。同时Redis也支持从特定的节点处添加节点（listInsertNode），当调用listInsertNode函数时，必须确保old_node参数（即想要添加的节点的参照节点）必须存在，否则将出现错误，此接口中，after参数为相对于old_node节点的位置。</p>
+</li>
+<li><p>删除<br> <code>void listDelNode(list *list, listNode *node);</code><br> 通过调用该接口，传入想要删除的节点，即可删除该节点。</p>
+</li>
+<li>查找<br> <code>listNode *listSearchKey(list *list, void *key);</code><br> 通过该接口，传入想要查找的关键字，返回匹配该关键字的节点。匹配操作分两种形式，一种为当list的match回调函数成功注册时，将使用用户的注册函数进行匹配，第二种当list的match回调未进行注册时，将用key直接与节点的value进行匹配。</li>
+</ol>
+<h1 id="链表的遍历"><a href="#链表的遍历" class="headerlink" title="链表的遍历"></a>链表的遍历</h1><p>链表的遍历，是链表必须要有的操作，一套好的遍历接口，可以方便的让使用者不用太关心链表的具体实现细节，即可遍历整个链表。在Redis的链表中，采用了迭代器的方式进行遍历，当用户需要遍历链表时，先申请一个迭代器，然后使用迭代器进行遍历，相当方便。接下来，一起看看Redis是怎样使用迭代器作为链表的遍历手段的。</p>
+<ol>
+<li>迭代器结构<br>在adlist.h文件中，我们可以看到，迭代器的原型如下：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">listIter</span> &#123;</span></span><br><span class="line">    listNode *next; <span class="comment">/*指向下一个节点*/</span></span><br><span class="line">    <span class="keyword">int</span> direction; <span class="comment">/*迭代器的遍历方向*/</span></span><br><span class="line">&#125; listIter;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>可以看到，迭代器保存了指向链表节点的指针，以及遍历方向的标志，目前，Redis支持两种遍历方向，分别为从头部和从尾部遍历的方式，在adlist.h中，可以看到定义这两种方式的宏，分别是：AL_START_HEAD和AL_START_TAIL。</p>
+<ol start="2">
+<li>创建迭代器</li>
+</ol>
+<p><code>listIter *listGetIterator(list *list, int direction);</code></p>
+<p>调用此接口，即可为链表创建一个迭代器，参数direction为该迭代器的遍历方向，可以为AL_START_HEAD或AL_START_TAIL。</p>
+<ol start="3">
+<li>使用迭代器</li>
+</ol>
+<p><code>listNode *listNext(listIter *iter);</code></p>
+<p>使用此接口，可以获得下一个链表节点，所以整个遍历过程可以参考如下代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span>((node = listNext(iter)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">    <span class="comment">/*do something...*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>销毁迭代器</li>
+</ol>
+<p><code>void listReleaseIterator(listIter *iter)；</code></p>
+<p>调用此接口即可将迭代器进行回收。</p>
+<h1 id="链表的复制"><a href="#链表的复制" class="headerlink" title="链表的复制"></a>链表的复制</h1><p>Redis提供了复制链表的接口，当需要复制一个同样的链表结构时，只需要调用listDup函数即可，其原型如下：</p>
+<p><code>list *listDup(list *orig);</code></p>
+<p>值得注意的是，当连接的dup回调函数为空时，复制的链表，其各节点所有的数据指针都将和原链表的相同，故此时如果对原链表的数据进行操作，将影响到复制的链表，切记。</p>
+<h1 id="链表的释放"><a href="#链表的释放" class="headerlink" title="链表的释放"></a>链表的释放</h1><p>当需要释放链表时，调用listRelease函数即可，其原型如下：</p>
+<p><code>void listRelease(list *list);</code></p>
+<h1 id="其他相关"><a href="#其他相关" class="headerlink" title="其他相关"></a>其他相关</h1><p>在adlist.h文件中，提供了一系列的宏操作，如listLength、listFirst、listLast等，从这些宏定义的名称上就能看出来它们的作用是干嘛的。下面，我们来看看listLength宏的实现：</p>
+<p><code>#define listLength(l) ((l)-&gt;len)</code></p>
+<p>通过该宏，用户可以获取到该链表的长度（即节点数），通过分析发现，其实该宏并没做啥特别的操作，直接指向了链表的len属性。可能有人就有疑问了，为啥需要这么做呢，岂不多此一举？答案并非如此，在我们的编码工作中，我们有时候并不希望别人直接访问我们的数据，因而提供一个接口，是调用者能够间接地进行访问而不需要知道我内部的数据结构。使用者可以更加方便的使用，从而更加关注于自己的业务开发。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过学习Redis链表实现，掌握了链表的一些基本操作以及平常编码过程中的一些技巧。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/19/Mysql按天、周、月、季度、年统计数据/" rel="next" title="Mysql按天、周、月、季度、年统计数据">
+                <i class="fa fa-chevron-left"></i> Mysql按天、周、月、季度、年统计数据
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/19/利用zlib解压http中gzip数据/" rel="prev" title="利用zlib解压http中gzip数据">
+                利用zlib解压http中gzip数据 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">弈心</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#介绍"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结构说明"><span class="nav-number">2.</span> <span class="nav-text">结构说明</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#链表的创建、添加、查找、删除"><span class="nav-number">3.</span> <span class="nav-text">链表的创建、添加、查找、删除</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#链表的遍历"><span class="nav-number">4.</span> <span class="nav-text">链表的遍历</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#链表的复制"><span class="nav-number">5.</span> <span class="nav-text">链表的复制</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#链表的释放"><span class="nav-number">6.</span> <span class="nav-text">链表的释放</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#其他相关"><span class="nav-number">7.</span> <span class="nav-text">其他相关</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">弈心</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

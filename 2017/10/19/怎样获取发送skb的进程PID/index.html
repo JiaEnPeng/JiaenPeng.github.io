@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="kernel,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景今天有同事问我，如何能够获得通过sk_buff得到发送此数据包的进程PID呢？仔细想了想，之前没遇到过此需求，所以，不好直接回复，由此，进行了以下的探索。 sk_buffsk_buff全名为socket buffers，简称skb，中文名字叫套接字缓存。它作为网络数据包的存放地点，使得协议栈中每个层都可以对数据进行操作，从而实现了数据包自底向上的传递。该结构维护一个收到的或者要发送的网络包。但">
+<meta name="keywords" content="kernel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="怎样获取发送skb的进程PID">
+<meta property="og:url" content="http://yoursite.com/2017/10/19/怎样获取发送skb的进程PID/index.html">
+<meta property="og:site_name" content="弈心">
+<meta property="og:description" content="背景今天有同事问我，如何能够获得通过sk_buff得到发送此数据包的进程PID呢？仔细想了想，之前没遇到过此需求，所以，不好直接回复，由此，进行了以下的探索。 sk_buffsk_buff全名为socket buffers，简称skb，中文名字叫套接字缓存。它作为网络数据包的存放地点，使得协议栈中每个层都可以对数据进行操作，从而实现了数据包自底向上的传递。该结构维护一个收到的或者要发送的网络包。但">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:updated_time" content="2017-12-27T09:28:37.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="怎样获取发送skb的进程PID">
+<meta name="twitter:description" content="背景今天有同事问我，如何能够获得通过sk_buff得到发送此数据包的进程PID呢？仔细想了想，之前没遇到过此需求，所以，不好直接回复，由此，进行了以下的探索。 sk_buffsk_buff全名为socket buffers，简称skb，中文名字叫套接字缓存。它作为网络数据包的存放地点，使得协议栈中每个层都可以对数据进行操作，从而实现了数据包自底向上的传递。该结构维护一个收到的或者要发送的网络包。但">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/10/19/怎样获取发送skb的进程PID/">
+
+
+
+
+
+  <title>怎样获取发送skb的进程PID | 弈心</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">弈心</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">个人博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/19/怎样获取发送skb的进程PID/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="弈心">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="弈心">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">怎样获取发送skb的进程PID</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-19T11:22:41+08:00">
+                2017-10-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>今天有同事问我，如何能够获得通过sk_buff得到发送此数据包的进程PID呢？仔细想了想，之前没遇到过此需求，所以，不好直接回复，由此，进行了以下的探索。</p>
+<h1 id="sk-buff"><a href="#sk-buff" class="headerlink" title="sk_buff"></a>sk_buff</h1><p>sk_buff全名为socket buffers，简称skb，中文名字叫套接字缓存。它作为网络数据包的存放地点，使得协议栈中每个层都可以对数据进行操作，从而实现了数据包自底向上的传递。该结构维护一个收到的或者要发送的网络包。但其本身并不包含存放网络包的数据的存储区。存储区是另外单独分配的内存空间，但该结构说明了如何访问存储区空间，如何维护多个存储区空间以及存储网络包解析的成果。</p>
+<p>所有的sk_buff是通过一个双向链表进行维护的。需要说明的是该双向链表中的一个元素是struct sk_buff_head类型。它相当于该双向链表的表头，其中有锁，链表元素个数等维护链表的相关信息。链表中其它的元素都是sk_buff类型。</p>
+<p>更多关于sk_buff的介绍，请自行查找相关资料。</p>
+<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>既然需要得到发送skb的进程PID，那么skb中是否保存了进程相关的信息呢，通过分析sk_buff的结构，并未发现在哪保存了进程相关的。sk_buff结构如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sk_buff</span> &#123;</span></span><br><span class="line">	<span class="comment">/* These two members must be first. */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sk_buff</span>		*<span class="title">next</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sk_buff</span>		*<span class="title">prev</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">union</span> &#123;</span><br><span class="line">		<span class="keyword">ktime_t</span>		tstamp;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">skb_mstamp</span> <span class="title">skb_mstamp</span>;</span></span><br><span class="line">	&#125;;</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sock</span>		*<span class="title">sk</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">net_device</span>	*<span class="title">dev</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * This is the control buffer. It is free to use for every</span></span><br><span class="line"><span class="comment">	 * layer. Please put your private variables there. If you</span></span><br><span class="line"><span class="comment">	 * want to keep them across layers you have to do a skb_clone()</span></span><br><span class="line"><span class="comment">	 * first. This is owned by whoever has the skb queued ATM.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">char</span>			cb[<span class="number">48</span>] __aligned(<span class="number">8</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span>		_skb_refdst;</span><br><span class="line">	<span class="keyword">void</span>			(*destructor)(struct sk_buff *skb);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_XFRM</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span>	<span class="title">sec_path</span>	*<span class="title">sp</span>;</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">nf_conntrack</span>	*<span class="title">nfct</span>;</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> IS_ENABLED(CONFIG_BRIDGE_NETFILTER)</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">nf_bridge_info</span>	*<span class="title">nf_bridge</span>;</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span>		len,</span><br><span class="line">				data_len;</span><br><span class="line">	__u16			mac_len,</span><br><span class="line">				hdr_len;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Following fields are _not_ copied in __copy_skb_header()</span></span><br><span class="line"><span class="comment">	 * Note that queue_mapping is here mostly to fill a hole.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	kmemcheck_bitfield_begin(flags1);</span><br><span class="line">	__u16			queue_mapping;</span><br><span class="line">	__u8			cloned:<span class="number">1</span>,</span><br><span class="line">				nohdr:<span class="number">1</span>,</span><br><span class="line">				fclone:<span class="number">2</span>,</span><br><span class="line">				peeked:<span class="number">1</span>,</span><br><span class="line">				head_frag:<span class="number">1</span>,</span><br><span class="line">				xmit_more:<span class="number">1</span>;</span><br><span class="line">	<span class="comment">/* one bit hole */</span></span><br><span class="line">	kmemcheck_bitfield_end(flags1);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* fields enclosed in headers_start/headers_end are copied</span></span><br><span class="line"><span class="comment">	 * using a single memcpy() in __copy_skb_header()</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">/* private: */</span></span><br><span class="line">	__u32			headers_start[<span class="number">0</span>];</span><br><span class="line">	<span class="comment">/* public: */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* if you move pkt_type around you also must adapt those constants */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> __BIG_ENDIAN_BITFIELD</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PKT_TYPE_MAX	(7 &lt;&lt; 5)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PKT_TYPE_MAX	7</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PKT_TYPE_OFFSET()	offsetof(struct sk_buff, __pkt_type_offset)</span></span><br><span class="line"></span><br><span class="line">	__u8			__pkt_type_offset[<span class="number">0</span>];</span><br><span class="line">	__u8			pkt_type:<span class="number">3</span>;</span><br><span class="line">	__u8			pfmemalloc:<span class="number">1</span>;</span><br><span class="line">	__u8			ignore_df:<span class="number">1</span>;</span><br><span class="line">	__u8			nfctinfo:<span class="number">3</span>;</span><br><span class="line"></span><br><span class="line">	__u8			nf_trace:<span class="number">1</span>;</span><br><span class="line">	__u8			ip_summed:<span class="number">2</span>;</span><br><span class="line">	__u8			ooo_okay:<span class="number">1</span>;</span><br><span class="line">	__u8			l4_hash:<span class="number">1</span>;</span><br><span class="line">	__u8			sw_hash:<span class="number">1</span>;</span><br><span class="line">	__u8			wifi_acked_valid:<span class="number">1</span>;</span><br><span class="line">	__u8			wifi_acked:<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">	__u8			no_fcs:<span class="number">1</span>;</span><br><span class="line">	<span class="comment">/* Indicates the inner headers are valid in the skbuff. */</span></span><br><span class="line">	__u8			encapsulation:<span class="number">1</span>;</span><br><span class="line">	__u8			encap_hdr_csum:<span class="number">1</span>;</span><br><span class="line">	__u8			csum_valid:<span class="number">1</span>;</span><br><span class="line">	__u8			csum_complete_sw:<span class="number">1</span>;</span><br><span class="line">	__u8			csum_level:<span class="number">2</span>;</span><br><span class="line">	__u8			csum_bad:<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_IPV6_NDISC_NODETYPE</span></span><br><span class="line">	__u8			ndisc_nodetype:<span class="number">2</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	__u8			ipvs_property:<span class="number">1</span>;</span><br><span class="line">	__u8			inner_protocol_type:<span class="number">1</span>;</span><br><span class="line">	<span class="comment">/* 4 or 6 bit hole */</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_NET_SCHED</span></span><br><span class="line">	__u16			tc_index;	<span class="comment">/* traffic control index */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_NET_CLS_ACT</span></span><br><span class="line">	__u16			tc_verd;	<span class="comment">/* traffic control verdict */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">union</span> &#123;</span><br><span class="line">		__wsum		csum;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">			__u16	csum_start;</span><br><span class="line">			__u16	csum_offset;</span><br><span class="line">		&#125;;</span><br><span class="line">	&#125;;</span><br><span class="line">	__u32			priority;</span><br><span class="line">	<span class="keyword">int</span>			skb_iif;</span><br><span class="line">	__u32			hash;</span><br><span class="line">	__be16			vlan_proto;</span><br><span class="line">	__u16			vlan_tci;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_NET_RX_BUSY_POLL</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span>	napi_id;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_NETWORK_SECMARK</span></span><br><span class="line">	__u32			secmark;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	<span class="keyword">union</span> &#123;</span><br><span class="line">		__u32		mark;</span><br><span class="line">		__u32		dropcount;</span><br><span class="line">		__u32		reserved_tailroom;</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">union</span> &#123;</span><br><span class="line">		__be16		inner_protocol;</span><br><span class="line">		__u8		inner_ipproto;</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br><span class="line">	__u16			inner_transport_header;</span><br><span class="line">	__u16			inner_network_header;</span><br><span class="line">	__u16			inner_mac_header;</span><br><span class="line"></span><br><span class="line">	__be16			protocol;</span><br><span class="line">	__u16			transport_header;</span><br><span class="line">	__u16			network_header;</span><br><span class="line">	__u16			mac_header;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* private: */</span></span><br><span class="line">	__u32			headers_end[<span class="number">0</span>];</span><br><span class="line">	<span class="comment">/* public: */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* These elements must be at the end, see alloc_skb() for details.  */</span></span><br><span class="line">	<span class="keyword">sk_buff_data_t</span>		tail;</span><br><span class="line">	<span class="keyword">sk_buff_data_t</span>		end;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">char</span>		*head,</span><br><span class="line">				*data;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span>		truesize;</span><br><span class="line">	<span class="keyword">atomic_t</span>		users;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>通过分析sk_buff结构，可以得到此sk_buff是由哪个sock发送的，那么，是否sock里面保存了进程相关信息呢？我们可以来看看sock结构：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  *	struct sock - network layer representation of sockets</span></span><br><span class="line"><span class="comment">  *	@__sk_common: shared layout with inet_timewait_sock</span></span><br><span class="line"><span class="comment">  *	@sk_shutdown: mask of %SEND_SHUTDOWN and/or %RCV_SHUTDOWN</span></span><br><span class="line"><span class="comment">  *	@sk_userlocks: %SO_SNDBUF and %SO_RCVBUF settings</span></span><br><span class="line"><span class="comment">  *	@sk_lock:	synchronizer</span></span><br><span class="line"><span class="comment">  *	@sk_rcvbuf: size of receive buffer in bytes</span></span><br><span class="line"><span class="comment">  *	@sk_wq: sock wait queue and async head</span></span><br><span class="line"><span class="comment">  *	@sk_rx_dst: receive input route used by early demux</span></span><br><span class="line"><span class="comment">  *	@sk_dst_cache: destination cache</span></span><br><span class="line"><span class="comment">  *	@sk_dst_lock: destination cache lock</span></span><br><span class="line"><span class="comment">  *	@sk_policy: flow policy</span></span><br><span class="line"><span class="comment">  *	@sk_receive_queue: incoming packets</span></span><br><span class="line"><span class="comment">  *	@sk_wmem_alloc: transmit queue bytes committed</span></span><br><span class="line"><span class="comment">  *	@sk_write_queue: Packet sending queue</span></span><br><span class="line"><span class="comment">  *	@sk_omem_alloc: "o" is "option" or "other"</span></span><br><span class="line"><span class="comment">  *	@sk_wmem_queued: persistent queue size</span></span><br><span class="line"><span class="comment">  *	@sk_forward_alloc: space allocated forward</span></span><br><span class="line"><span class="comment">  *	@sk_napi_id: id of the last napi context to receive data for sk</span></span><br><span class="line"><span class="comment">  *	@sk_ll_usec: usecs to busypoll when there is no data</span></span><br><span class="line"><span class="comment">  *	@sk_allocation: allocation mode</span></span><br><span class="line"><span class="comment">  *	@sk_pacing_rate: Pacing rate (if supported by transport/packet scheduler)</span></span><br><span class="line"><span class="comment">  *	@sk_max_pacing_rate: Maximum pacing rate (%SO_MAX_PACING_RATE)</span></span><br><span class="line"><span class="comment">  *	@sk_sndbuf: size of send buffer in bytes</span></span><br><span class="line"><span class="comment">  *	@sk_flags: %SO_LINGER (l_onoff), %SO_BROADCAST, %SO_KEEPALIVE,</span></span><br><span class="line"><span class="comment">  *		   %SO_OOBINLINE settings, %SO_TIMESTAMPING settings</span></span><br><span class="line"><span class="comment">  *	@sk_no_check_tx: %SO_NO_CHECK setting, set checksum in TX packets</span></span><br><span class="line"><span class="comment">  *	@sk_no_check_rx: allow zero checksum in RX packets</span></span><br><span class="line"><span class="comment">  *	@sk_route_caps: route capabilities (e.g. %NETIF_F_TSO)</span></span><br><span class="line"><span class="comment">  *	@sk_route_nocaps: forbidden route capabilities (e.g NETIF_F_GSO_MASK)</span></span><br><span class="line"><span class="comment">  *	@sk_gso_type: GSO type (e.g. %SKB_GSO_TCPV4)</span></span><br><span class="line"><span class="comment">  *	@sk_gso_max_size: Maximum GSO segment size to build</span></span><br><span class="line"><span class="comment">  *	@sk_gso_max_segs: Maximum number of GSO segments</span></span><br><span class="line"><span class="comment">  *	@sk_lingertime: %SO_LINGER l_linger setting</span></span><br><span class="line"><span class="comment">  *	@sk_backlog: always used with the per-socket spinlock held</span></span><br><span class="line"><span class="comment">  *	@sk_callback_lock: used with the callbacks in the end of this struct</span></span><br><span class="line"><span class="comment">  *	@sk_error_queue: rarely used</span></span><br><span class="line"><span class="comment">  *	@sk_prot_creator: sk_prot of original sock creator (see ipv6_setsockopt,</span></span><br><span class="line"><span class="comment">  *			  IPV6_ADDRFORM for instance)</span></span><br><span class="line"><span class="comment">  *	@sk_err: last error</span></span><br><span class="line"><span class="comment">  *	@sk_err_soft: errors that don't cause failure but are the cause of a</span></span><br><span class="line"><span class="comment">  *		      persistent failure not just 'timed out'</span></span><br><span class="line"><span class="comment">  *	@sk_drops: raw/udp drops counter</span></span><br><span class="line"><span class="comment">  *	@sk_ack_backlog: current listen backlog</span></span><br><span class="line"><span class="comment">  *	@sk_max_ack_backlog: listen backlog set in listen()</span></span><br><span class="line"><span class="comment">  *	@sk_priority: %SO_PRIORITY setting</span></span><br><span class="line"><span class="comment">  *	@sk_cgrp_prioidx: socket group's priority map index</span></span><br><span class="line"><span class="comment">  *	@sk_type: socket type (%SOCK_STREAM, etc)</span></span><br><span class="line"><span class="comment">  *	@sk_protocol: which protocol this socket belongs in this network family</span></span><br><span class="line"><span class="comment">  *	@sk_peer_pid: &amp;struct pid for this socket's peer</span></span><br><span class="line"><span class="comment">  *	@sk_peer_cred: %SO_PEERCRED setting</span></span><br><span class="line"><span class="comment">  *	@sk_rcvlowat: %SO_RCVLOWAT setting</span></span><br><span class="line"><span class="comment">  *	@sk_rcvtimeo: %SO_RCVTIMEO setting</span></span><br><span class="line"><span class="comment">  *	@sk_sndtimeo: %SO_SNDTIMEO setting</span></span><br><span class="line"><span class="comment">  *	@sk_rxhash: flow hash received from netif layer</span></span><br><span class="line"><span class="comment">  *	@sk_txhash: computed flow hash for use on transmit</span></span><br><span class="line"><span class="comment">  *	@sk_filter: socket filtering instructions</span></span><br><span class="line"><span class="comment">  *	@sk_protinfo: private area, net family specific, when not using slab</span></span><br><span class="line"><span class="comment">  *	@sk_timer: sock cleanup timer</span></span><br><span class="line"><span class="comment">  *	@sk_stamp: time stamp of last packet received</span></span><br><span class="line"><span class="comment">  *	@sk_tsflags: SO_TIMESTAMPING socket options</span></span><br><span class="line"><span class="comment">  *	@sk_tskey: counter to disambiguate concurrent tstamp requests</span></span><br><span class="line"><span class="comment">  *	@sk_socket: Identd and reporting IO signals</span></span><br><span class="line"><span class="comment">  *	@sk_user_data: RPC layer private data</span></span><br><span class="line"><span class="comment">  *	@sk_frag: cached page frag</span></span><br><span class="line"><span class="comment">  *	@sk_peek_off: current peek_offset value</span></span><br><span class="line"><span class="comment">  *	@sk_send_head: front of stuff to transmit</span></span><br><span class="line"><span class="comment">  *	@sk_security: used by security modules</span></span><br><span class="line"><span class="comment">  *	@sk_mark: generic packet mark</span></span><br><span class="line"><span class="comment">  *	@sk_classid: this socket's cgroup classid</span></span><br><span class="line"><span class="comment">  *	@sk_cgrp: this socket's cgroup-specific proto data</span></span><br><span class="line"><span class="comment">  *	@sk_write_pending: a write to stream socket waits to start</span></span><br><span class="line"><span class="comment">  *	@sk_state_change: callback to indicate change in the state of the sock</span></span><br><span class="line"><span class="comment">  *	@sk_data_ready: callback to indicate there is data to be processed</span></span><br><span class="line"><span class="comment">  *	@sk_write_space: callback to indicate there is bf sending space available</span></span><br><span class="line"><span class="comment">  *	@sk_error_report: callback to indicate errors (e.g. %MSG_ERRQUEUE)</span></span><br><span class="line"><span class="comment">  *	@sk_backlog_rcv: callback to process the backlog</span></span><br><span class="line"><span class="comment">  *	@sk_destruct: called at sock freeing time, i.e. when all refcnt == 0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sock</span> &#123;</span></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Now struct inet_timewait_sock also uses sock_common, so please just</span></span><br><span class="line"><span class="comment">	 * don't add nothing before this first member (__sk_common) --acme</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sock_common</span>	__<span class="title">sk_common</span>;</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_node			__sk_common.skc_node</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_nulls_node		__sk_common.skc_nulls_node</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_refcnt		__sk_common.skc_refcnt</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_tx_queue_mapping	__sk_common.skc_tx_queue_mapping</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_dontcopy_begin	__sk_common.skc_dontcopy_begin</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_dontcopy_end		__sk_common.skc_dontcopy_end</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_hash			__sk_common.skc_hash</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_portpair		__sk_common.skc_portpair</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_num			__sk_common.skc_num</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_dport		__sk_common.skc_dport</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_addrpair		__sk_common.skc_addrpair</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_daddr		__sk_common.skc_daddr</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_rcv_saddr		__sk_common.skc_rcv_saddr</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_family		__sk_common.skc_family</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_state		__sk_common.skc_state</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_reuse		__sk_common.skc_reuse</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_reuseport		__sk_common.skc_reuseport</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_ipv6only		__sk_common.skc_ipv6only</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_bound_dev_if		__sk_common.skc_bound_dev_if</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_bind_node		__sk_common.skc_bind_node</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_prot			__sk_common.skc_prot</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_net			__sk_common.skc_net</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_v6_daddr		__sk_common.skc_v6_daddr</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_v6_rcv_saddr	__sk_common.skc_v6_rcv_saddr</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">socket_lock_t</span>		sk_lock;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sk_buff_head</span>	<span class="title">sk_receive_queue</span>;</span></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * The backlog queue is special, it is always used with</span></span><br><span class="line"><span class="comment">	 * the per-socket spinlock held and requires low latency</span></span><br><span class="line"><span class="comment">	 * access. Therefore we special case it's implementation.</span></span><br><span class="line"><span class="comment">	 * Note : rmem_alloc is in this structure to fill a hole</span></span><br><span class="line"><span class="comment">	 * on 64bit arches, not because its logically part of</span></span><br><span class="line"><span class="comment">	 * backlog.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">		<span class="keyword">atomic_t</span>	rmem_alloc;</span><br><span class="line">		<span class="keyword">int</span>		len;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">sk_buff</span>	*<span class="title">head</span>;</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">sk_buff</span>	*<span class="title">tail</span>;</span></span><br><span class="line">	&#125; sk_backlog;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> sk_rmem_alloc sk_backlog.rmem_alloc</span></span><br><span class="line">	<span class="keyword">int</span>			sk_forward_alloc;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_RPS</span></span><br><span class="line">	__u32			sk_rxhash;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	__u32			sk_txhash;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_NET_RX_BUSY_POLL</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span>		sk_napi_id;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span>		sk_ll_usec;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	<span class="keyword">atomic_t</span>		sk_drops;</span><br><span class="line">	<span class="keyword">int</span>			sk_rcvbuf;</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sk_filter</span> __<span class="title">rcu</span>	*<span class="title">sk_filter</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">socket_wq</span> __<span class="title">rcu</span>	*<span class="title">sk_wq</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_XFRM</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">xfrm_policy</span>	*<span class="title">sk_policy</span>[2];</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> 		sk_flags;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">dst_entry</span>	*<span class="title">sk_rx_dst</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">dst_entry</span> __<span class="title">rcu</span>	*<span class="title">sk_dst_cache</span>;</span></span><br><span class="line">	<span class="keyword">spinlock_t</span>		sk_dst_lock;</span><br><span class="line">	<span class="keyword">atomic_t</span>		sk_wmem_alloc;</span><br><span class="line">	<span class="keyword">atomic_t</span>		sk_omem_alloc;</span><br><span class="line">	<span class="keyword">int</span>			sk_sndbuf;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sk_buff_head</span>	<span class="title">sk_write_queue</span>;</span></span><br><span class="line">	kmemcheck_bitfield_begin(flags);</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span>		sk_shutdown  : <span class="number">2</span>,</span><br><span class="line">				sk_no_check_tx : <span class="number">1</span>,</span><br><span class="line">				sk_no_check_rx : <span class="number">1</span>,</span><br><span class="line">				sk_userlocks : <span class="number">4</span>,</span><br><span class="line">				sk_protocol  : <span class="number">8</span>,</span><br><span class="line">				sk_type      : <span class="number">16</span>;</span><br><span class="line">	kmemcheck_bitfield_end(flags);</span><br><span class="line">	<span class="keyword">int</span>			sk_wmem_queued;</span><br><span class="line">	<span class="keyword">gfp_t</span>			sk_allocation;</span><br><span class="line">	u32			sk_pacing_rate; <span class="comment">/* bytes per second */</span></span><br><span class="line">	u32			sk_max_pacing_rate;</span><br><span class="line">	<span class="keyword">netdev_features_t</span>	sk_route_caps;</span><br><span class="line">	<span class="keyword">netdev_features_t</span>	sk_route_nocaps;</span><br><span class="line">	<span class="keyword">int</span>			sk_gso_type;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span>		sk_gso_max_size;</span><br><span class="line">	u16			sk_gso_max_segs;</span><br><span class="line">	<span class="keyword">int</span>			sk_rcvlowat;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span>	        sk_lingertime;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sk_buff_head</span>	<span class="title">sk_error_queue</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">proto</span>		*<span class="title">sk_prot_creator</span>;</span></span><br><span class="line">	<span class="keyword">rwlock_t</span>		sk_callback_lock;</span><br><span class="line">	<span class="keyword">int</span>			sk_err,</span><br><span class="line">				sk_err_soft;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">short</span>		sk_ack_backlog;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">short</span>		sk_max_ack_backlog;</span><br><span class="line">	__u32			sk_priority;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> IS_ENABLED(CONFIG_CGROUP_NET_PRIO)</span></span><br><span class="line">	__u32			sk_cgrp_prioidx;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">pid</span>		*<span class="title">sk_peer_pid</span>;</span></span><br><span class="line">	<span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">cred</span>	*<span class="title">sk_peer_cred</span>;</span></span><br><span class="line">	<span class="keyword">long</span>			sk_rcvtimeo;</span><br><span class="line">	<span class="keyword">long</span>			sk_sndtimeo;</span><br><span class="line">	<span class="keyword">void</span>			*sk_protinfo;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">timer_list</span>	<span class="title">sk_timer</span>;</span></span><br><span class="line">	<span class="keyword">ktime_t</span>			sk_stamp;</span><br><span class="line">	u16			sk_tsflags;</span><br><span class="line">	u32			sk_tskey;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">socket</span>		*<span class="title">sk_socket</span>;</span></span><br><span class="line">	<span class="keyword">void</span>			*sk_user_data;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">page_frag</span>	<span class="title">sk_frag</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sk_buff</span>		*<span class="title">sk_send_head</span>;</span></span><br><span class="line">	__s32			sk_peek_off;</span><br><span class="line">	<span class="keyword">int</span>			sk_write_pending;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_SECURITY</span></span><br><span class="line">	<span class="keyword">void</span>			*sk_security;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	__u32			sk_mark;</span><br><span class="line">	u32			sk_classid;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">cg_proto</span>		*<span class="title">sk_cgrp</span>;</span></span><br><span class="line">	<span class="keyword">void</span>			(*sk_state_change)(struct sock *sk);</span><br><span class="line">	<span class="keyword">void</span>			(*sk_data_ready)(struct sock *sk);</span><br><span class="line">	<span class="keyword">void</span>			(*sk_write_space)(struct sock *sk);</span><br><span class="line">	<span class="keyword">void</span>			(*sk_error_report)(struct sock *sk);</span><br><span class="line">	<span class="keyword">int</span>			(*sk_backlog_rcv)(struct sock *sk,</span><br><span class="line">						  struct sk_buff *skb);</span><br><span class="line">	<span class="keyword">void</span>                    (*sk_destruct)(struct sock *sk);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>通过分析此结构，发现其存有sk_peer_pid字段，我们可以看看关于此字段的说明: sk_peer_pid: &amp;struct pid for this socket’s peer。可以知道，此字段保存的是对端sock所对应的进程PID，所以，针对的是sock为域套接字的情况。并不能代表当前sock的PID。</p>
+<p>由此，分析陷入了僵局。</p>
+<h1 id="另一种思路"><a href="#另一种思路" class="headerlink" title="另一种思路"></a>另一种思路</h1><p>通过上述分析，发现无法获取发送此sk_buff的进程PID，是否就不能获取到了呢？仔细思考了一番发现，之前的思路完全进入了死胡同。我一直思考由sk_buff找进程，却没有思考过由进程找sk_buff。</p>
+<p>在进程通过系统调用(write,send,sendto…)进行数据包发送时，其通过套接字描述符传递给内核，告诉内核此数据包使用哪个套接字发送，其最终的调用如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> *	Send a datagram to a given address. We move the address into kernel</span></span><br><span class="line"><span class="comment"> *	space and check the user space data area is readable before invoking</span></span><br><span class="line"><span class="comment"> *	the protocol.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line">SYSCALL_DEFINE6(sendto, <span class="keyword">int</span>, fd, <span class="keyword">void</span> __user *, buff, <span class="keyword">size_t</span>, len,</span><br><span class="line">		<span class="keyword">unsigned</span> <span class="keyword">int</span>, flags, struct sockaddr __user *, addr,</span><br><span class="line">		<span class="keyword">int</span>, addr_len)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">socket</span> *<span class="title">sock</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_storage</span> <span class="title">address</span>;</span></span><br><span class="line">	<span class="keyword">int</span> err;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">msghdr</span> <span class="title">msg</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">iovec</span> <span class="title">iov</span>;</span></span><br><span class="line">	<span class="keyword">int</span> fput_needed;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (len &gt; INT_MAX)</span><br><span class="line">		len = INT_MAX;</span><br><span class="line">	sock = sockfd_lookup_light(fd, &amp;err, &amp;fput_needed);</span><br><span class="line">	<span class="keyword">if</span> (!sock)</span><br><span class="line">		<span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">	iov.iov_base = buff;</span><br><span class="line">	iov.iov_len = len;</span><br><span class="line">	msg.msg_name = <span class="literal">NULL</span>;</span><br><span class="line">	msg.msg_iov = &amp;iov;</span><br><span class="line">	msg.msg_iovlen = <span class="number">1</span>;</span><br><span class="line">	msg.msg_control = <span class="literal">NULL</span>;</span><br><span class="line">	msg.msg_controllen = <span class="number">0</span>;</span><br><span class="line">	msg.msg_namelen = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">if</span> (addr) &#123;</span><br><span class="line">		err = move_addr_to_kernel(addr, addr_len, &amp;address);</span><br><span class="line">		<span class="keyword">if</span> (err &lt; <span class="number">0</span>)</span><br><span class="line">			<span class="keyword">goto</span> out_put;</span><br><span class="line">		msg.msg_name = (struct sockaddr *)&amp;address;</span><br><span class="line">		msg.msg_namelen = addr_len;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (sock-&gt;file-&gt;f_flags &amp; O_NONBLOCK)</span><br><span class="line">		flags |= MSG_DONTWAIT;</span><br><span class="line">	msg.msg_flags = flags;</span><br><span class="line">	err = sock_sendmsg(sock, &amp;msg, len);</span><br><span class="line"></span><br><span class="line">out_put:</span><br><span class="line">	fput_light(sock-&gt;file, fput_needed);</span><br><span class="line">out:</span><br><span class="line">	<span class="keyword">return</span> err;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由此可以知道，通过sock = sockfd_lookup_light(fd, &amp;err, &amp;fput_needed);即可找到fd对应的sock。</p>
+<p>所以，我们可以通过遍历系统中所有的进程，并遍历进程打开的文件，通过文件过滤出sock类型的文件，找到进程所有的sock，并将sock与sk_buff里面的sock进行对比，如果是相同的sock，那么就得到了此sk_buff对应的进程了，此时进程的所有信息都能过获取到了(包括进程PID)。</p>
+<h1 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h1><p>通过在Netfilter的Localout点挂在钩子，获取由系统发出的所有数据包，进行查找此发送数据包的进程。代码如下(基于linux 3.18.24内核)：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/ctype.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/netdevice.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/netfilter.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/netfilter_ipv4.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/skbuff.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/sched.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/fs.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/fdtable.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/net.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/file.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> _local_out_ipv4(</span><br><span class="line">    <span class="keyword">const</span> struct nf_hook_ops *ops,</span><br><span class="line">    struct sk_buff *skb,</span><br><span class="line">    <span class="keyword">const</span> struct net_device *in,</span><br><span class="line">    <span class="keyword">const</span> struct net_device *out,</span><br><span class="line">    <span class="keyword">int</span> (*okfn)(struct sk_buff *))</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sock</span>* <span class="title">sk</span> = <span class="title">skb</span>-&gt;<span class="title">sk</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">p</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">socket</span> *<span class="title">sock</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">files_struct</span> *<span class="title">files</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">file</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fdtable</span> *<span class="title">fdt</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fd</span> <span class="title">f</span>;</span></span><br><span class="line">    <span class="keyword">pid_t</span> pid;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">int</span> err = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sk) &#123;</span><br><span class="line">        rcu_read_lock();</span><br><span class="line">        for_each_process(p) &#123;</span><br><span class="line">            task_lock(p);</span><br><span class="line">            files = p-&gt;files;</span><br><span class="line">            <span class="keyword">if</span>(!files) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            fdt = rcu_dereference_raw(files-&gt;fdt);</span><br><span class="line">            <span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;fdt-&gt;max_fds; i++) &#123;</span><br><span class="line">                file = rcu_dereference_raw(fdt-&gt;fd[i]);</span><br><span class="line">                f = __to_fd((<span class="keyword">unsigned</span> <span class="keyword">long</span>)file);</span><br><span class="line">                <span class="keyword">if</span>(f.file) &#123;</span><br><span class="line">                    sock = sock_from_file(f.file, &amp;err);</span><br><span class="line">                    <span class="keyword">if</span>(sock) &#123;</span><br><span class="line">                        <span class="keyword">if</span>(sock-&gt;sk == sk) &#123;</span><br><span class="line">                            pid = p-&gt;pid;</span><br><span class="line">                            printk(<span class="string">"This Pkt from pid [%d]!\n"</span>, pid);</span><br><span class="line">                            task_unlock(p);</span><br><span class="line">                            <span class="keyword">goto</span> ok;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            task_unlock(p);</span><br><span class="line">        &#125;</span><br><span class="line">ok:</span><br><span class="line">        rcu_read_unlock();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> NF_ACCEPT;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">nf_hook_ops</span> <span class="title">my_hook_ops</span>[] = &#123;</span></span><br><span class="line">    &#123;</span><br><span class="line">        .hook = _local_out_ipv4,</span><br><span class="line">        .owner = THIS_MODULE,</span><br><span class="line">        .pf = NFPROTO_IPV4,</span><br><span class="line">        .hooknum = NF_INET_LOCAL_OUT,</span><br><span class="line">        .priority = NF_IP_PRI_LAST,</span><br><span class="line">    &#125;,      </span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> __<span class="function">init <span class="title">my_hook_init</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	nf_register_hooks(my_hook_ops, ARRAY_SIZE(my_hook_ops));</span><br><span class="line">	printk(<span class="string">"hook init+++++++++++++++++++++++++++++++++++++++++\n"</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> __<span class="function"><span class="built_in">exit</span> <span class="title">my_hook_exit</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	nf_unregister_hooks(my_hook_ops, ARRAY_SIZE(my_hook_ops));</span><br><span class="line">	printk(<span class="string">"hook exit\n"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(my_hook_init);</span><br><span class="line">module_exit(my_hook_exit);</span><br><span class="line"></span><br><span class="line">MODULE_LICENSE(<span class="string">"GPL"</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">"JeanP"</span>);</span><br></pre></td></tr></table></figure>
+<p>编译，插入模块，通过dmesg可以看到：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[24266.003395] [HOOK]	This Pkt from pid [1557]!</span><br><span class="line">[24266.036238] [HOOK]	This Pkt from pid [1557]!</span><br><span class="line">[24266.068725] [HOOK]	This Pkt from pid [1557]!</span><br><span class="line">[24266.101837] [HOOK]	This Pkt from pid [1557]!</span><br><span class="line">[24266.134864] [HOOK]	This Pkt from pid [1557]!</span><br></pre></td></tr></table></figure>
+<p>由此可知，上述的这几个数据包都是从进程PID为1557发送出来的。</p>
+<p>通过，pstree -p 可以看到：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">├─sshd(1198)─┬─sshd(1557)───bash(1762)</span><br><span class="line">│            └─sshd(38305)───bash(38521)───pstree(38534)</span><br></pre></td></tr></table></figure>
+<p>对比可知，dmesg看到的几个包都是由sshd发送出来的SSH报文。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过上述探索过程，发现遇到问题时，有时候换一种思路，或许能很快的解决。</p>
+<p>上述实现代码，仅作参考，实际上并不提倡这样用，因为针对每个sk_buff，都遍历了系统中所有进程打开的文件，如果流量大，进程多，打开的文件数多，那么效率是相当低的。实际开发中，如果有这样的需求，应当建立自己的哈希表，根据数据包的源IP、源端口以及协议类型(TCP or UDP)进行哈希，从哈希表找到相应的进程，如果找不到，再遍历进程树，进而保存。然后再维护哈希表的超时机制即可。这样效率就比原来的要高得多了。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/kernel/" rel="tag"># kernel</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/19/怎样在Buildroot中添加自定义的package/" rel="next" title="怎样在Buildroot中添加自定义的package">
+                <i class="fa fa-chevron-left"></i> 怎样在Buildroot中添加自定义的package
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/19/是谁在试探我的root密码/" rel="prev" title="是谁在试探我的root密码">
+                是谁在试探我的root密码 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">弈心</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sk-buff"><span class="nav-number">2.</span> <span class="nav-text">sk_buff</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分析"><span class="nav-number">3.</span> <span class="nav-text">分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#另一种思路"><span class="nav-number">4.</span> <span class="nav-text">另一种思路</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#代码实现"><span class="nav-number">5.</span> <span class="nav-text">代码实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">弈心</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

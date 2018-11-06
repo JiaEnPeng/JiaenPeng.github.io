@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Mysql,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景在mysql使用过程中，常常需要将查询的数据按天、周等格式进行统计输出。此时需要用到DATE_FORMAT函数，对结果数据中的日期按特定格式进行分类。 DATE_FORMAT简介函数原型：DATE_FORMAT(date,format)参数说明：1. date 日期。 2. format 格式函数功能：根据format字符串格式化date值。其中format可以是：  %M 月名字(Janua">
+<meta name="keywords" content="Mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql按天、周、月、季度、年统计数据">
+<meta property="og:url" content="http://yoursite.com/2017/10/19/Mysql按天、周、月、季度、年统计数据/index.html">
+<meta property="og:site_name" content="弈心">
+<meta property="og:description" content="背景在mysql使用过程中，常常需要将查询的数据按天、周等格式进行统计输出。此时需要用到DATE_FORMAT函数，对结果数据中的日期按特定格式进行分类。 DATE_FORMAT简介函数原型：DATE_FORMAT(date,format)参数说明：1. date 日期。 2. format 格式函数功能：根据format字符串格式化date值。其中format可以是：  %M 月名字(Janua">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:updated_time" content="2017-12-27T09:28:37.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mysql按天、周、月、季度、年统计数据">
+<meta name="twitter:description" content="背景在mysql使用过程中，常常需要将查询的数据按天、周等格式进行统计输出。此时需要用到DATE_FORMAT函数，对结果数据中的日期按特定格式进行分类。 DATE_FORMAT简介函数原型：DATE_FORMAT(date,format)参数说明：1. date 日期。 2. format 格式函数功能：根据format字符串格式化date值。其中format可以是：  %M 月名字(Janua">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/10/19/Mysql按天、周、月、季度、年统计数据/">
+
+
+
+
+
+  <title>Mysql按天、周、月、季度、年统计数据 | 弈心</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">弈心</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">个人博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/19/Mysql按天、周、月、季度、年统计数据/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="弈心">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="弈心">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Mysql按天、周、月、季度、年统计数据</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-19T11:22:24+08:00">
+                2017-10-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在mysql使用过程中，常常需要将查询的数据按天、周等格式进行统计输出。此时需要用到DATE_FORMAT函数，对结果数据中的日期按特定格式进行分类。</p>
+<h2 id="DATE-FORMAT简介"><a href="#DATE-FORMAT简介" class="headerlink" title="DATE_FORMAT简介"></a>DATE_FORMAT简介</h2><p>函数原型：DATE_FORMAT(date,format)<br>参数说明：1. date 日期。 2. format 格式<br>函数功能：根据format字符串格式化date值。其中format可以是：</p>
+<ul>
+<li>%M 月名字(January……December) </li>
+<li>%W 星期名字(Sunday……Saturday) </li>
+<li>%D 有英语前缀的月份的日期(1st, 2nd, 3rd, 等等。） </li>
+<li>%Y 年, 数字, 4 位 </li>
+<li>%y 年, 数字, 2 位 </li>
+<li>%a 缩写的星期名字(Sun……Sat) </li>
+<li>%d 月份中的天数, 数字(00……31) </li>
+<li>%e 月份中的天数, 数字(0……31) </li>
+<li>%m 月, 数字(01……12) </li>
+<li>%c 月, 数字(1……12) </li>
+<li>%b 缩写的月份名字(Jan……Dec) </li>
+<li>%j 一年中的天数(001……366) </li>
+<li>%H 小时(00……23) </li>
+<li>%k 小时(0……23) </li>
+<li>%h 小时(01……12) </li>
+<li>%I 小时(01……12) </li>
+<li>%l 小时(1……12) </li>
+<li>%i 分钟, 数字(00……59) </li>
+<li>%r 时间,12 小时(hh:mm:ss [AP]M) </li>
+<li>%T 时间,24 小时(hh:mm:ss) </li>
+<li>%S 秒(00……59) </li>
+<li>%s 秒(00……59) </li>
+<li>%p AM或PM </li>
+<li>%w 一个星期中的天数(0=Sunday ……6=Saturday ） </li>
+<li>%U 星期(0……52), 这里星期天是星期的第一天 </li>
+<li>%u 星期(0……52), 这里星期一是星期的第一天 </li>
+<li>%% 一个文字“%”</li>
+</ul>
+<h2 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h2><p>现mysql数据库中有一张数据表t_test，其各字段如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; show columns from t_test;</span><br><span class="line">+-------+---------+------+-----+---------+-------+</span><br><span class="line">| Field | Type    | Null | Key | Default | Extra |</span><br><span class="line">+-------+---------+------+-----+---------+-------+</span><br><span class="line">| id    | int(11) | YES  |     | NULL    |       |</span><br><span class="line">| d     | date    | YES  |     | NULL    |       |</span><br><span class="line">| u     | int(11) | YES  |     | NULL    |       |</span><br><span class="line">+-------+---------+------+-----+---------+-------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>其中，表中有如下数据：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from t_test;</span><br><span class="line">+------+------------+------+</span><br><span class="line">| id   | d          | u    |</span><br><span class="line">+------+------------+------+</span><br><span class="line">| NULL | 2017-04-16 | 4335 |</span><br><span class="line">| NULL | 2017-04-13 |   43 |</span><br><span class="line">| NULL | 2017-05-13 |   43 |</span><br><span class="line">| NULL | 2017-05-24 |   43 |</span><br><span class="line">| NULL | 0000-00-00 |   43 |</span><br><span class="line">| NULL | 2017-05-31 |   43 |</span><br><span class="line">| NULL | 0000-00-00 |   43 |</span><br><span class="line">+------+------------+------+</span><br><span class="line">7 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>现在，针对该表，分别按天、周、月进行统计在对应时间段内字段u的和值。</p>
+<ul>
+<li><p>按天统计</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select DATE_FORMAT(d,&quot;%d&quot;) as day,sum(u) as total from t_test group by day;</span><br><span class="line">+------+-------+</span><br><span class="line">| day  | total |</span><br><span class="line">+------+-------+</span><br><span class="line">| 00   |    86 |</span><br><span class="line">| 13   |    86 |</span><br><span class="line">| 16   |  4335 |</span><br><span class="line">| 24   |    43 |</span><br><span class="line">| 31   |    43 |</span><br><span class="line">+------+-------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>按周统计</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select DATE_FORMAT(d,&quot;%U&quot;) as week,sum(u) as total from t_test group by week;</span><br><span class="line">+------+-------+</span><br><span class="line">| week | total |</span><br><span class="line">+------+-------+</span><br><span class="line">| 15   |    43 |</span><br><span class="line">| 16   |  4335 |</span><br><span class="line">| 19   |    43 |</span><br><span class="line">| 21   |    43 |</span><br><span class="line">| 22   |    43 |</span><br><span class="line">| 61   |    86 |</span><br><span class="line">+------+-------+</span><br><span class="line">6 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>按月统计</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select DATE_FORMAT(d,&quot;%m&quot;) as week,sum(u) as total from t_test group by week;</span><br><span class="line">+------+-------+</span><br><span class="line">| week | total |</span><br><span class="line">+------+-------+</span><br><span class="line">| 00   |    86 |</span><br><span class="line">| 04   |  4378 |</span><br><span class="line">| 05   |   129 |</span><br><span class="line">+------+-------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>通过DATE_FORMAT函数，可以很方便的按照特定的日期格式，输出对应的统计结果。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Mysql/" rel="tag"># Mysql</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/19/Linux下用户层通过proc文件系统与内核进行通信/" rel="next" title="Linux下用户层通过proc文件系统与内核进行通信">
+                <i class="fa fa-chevron-left"></i> Linux下用户层通过proc文件系统与内核进行通信
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/19/Redis数据结构之链表实现——Adlist/" rel="prev" title="Redis数据结构之链表实现——Adlist">
+                Redis数据结构之链表实现——Adlist <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">弈心</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DATE-FORMAT简介"><span class="nav-number">2.</span> <span class="nav-text">DATE_FORMAT简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用示例"><span class="nav-number">3.</span> <span class="nav-text">使用示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">弈心</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
