@@ -310,7 +310,7 @@
 <p>拷贝平台默认的配置文件到内核源码的顶级目录：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# cp configs/kernel-3.10.0-`uname -m`.config .config</span><br></pre></td></tr></table></figure></p>
 <h3 id="修改内核配置"><a href="#修改内核配置" class="headerlink" title="修改内核配置"></a>修改内核配置</h3><p>执行make oldconfig命令<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# make oldconfig</span><br></pre></td></tr></table></figure></p>
 <p>此时，默认的内核配置已经生成，接下来可以进行自定义配置了，执行make menuconfig<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# make menuconfig</span><br></pre></td></tr></table></figure></p>
-<p>在make menuconfig修改完配置退出时，记得保存配置。<br><strong>重要：修改.config文件，在文件第一行添加如下一行(针对x86_64，其他平台可运行‘uname -m’命令查看平台的体系结构)</strong><br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> x86_64</span><br></pre></td></tr></table></figure></p>
+<p>在make menuconfig修改完配置退出时，记得保存配置。<br><strong>重要：修改.config文件，在文件第一行添加如下一行(针对x86_64，其他平台可运行‘uname -m’命令查看平台的体系结构)</strong><br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> x86_64</span></span><br></pre></td></tr></table></figure></p>
 <p>前面的#号不可少。<br>将修改后的配置文件保存<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# cp .config configs/kernel-3.10.0-`uname -m`.config</span><br><span class="line">[root@JeanP ~]# cp configs/* ~/rpmbuild/SOURCES/</span><br></pre></td></tr></table></figure></p>
 <h2 id="内核编译"><a href="#内核编译" class="headerlink" title="内核编译"></a>内核编译</h2><p><strong> 内核的 ABI </strong><br>CentOS 内核的其中一个特色就是它的应用程序二进制界面（ABI）会在整个产品生效期内保持一样。ABI 维持不变的好处，就是外置的内核模块在创建时不必与内核版本挂钩 —— 因此它们不必在新内核发行时被重新创建。这是追踪 ABI 内核模块组件的基础 —— 它们可以提供更新的驱动程序及其它文件系统等支持。</p>
 <p>为了维系 ABI 的一致性，原先的内核的 ABI 会被记录及存储在一个文件内。这个文件会在创建每个新内核时用来检查 kABI。如果新的内核被设置或修改至一个地步令它的 ABI 与先前的有差别，编译将会失败，并且会有信息表示 kABI 的一致性已被破坏。这时，内核创建者有两个选择：（一）重新设置新的内核，让它的 ABI 与原有的能互相吻合，因而可继续享受一致 ABI 所提供的好处；（二）在创建的过程中停止检查 kABI。在这两个选择之间，前者较为可取，但有时后者是唯一可行的方法。</p>
@@ -443,7 +443,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-count">24</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -456,7 +456,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-count">14</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

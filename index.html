@@ -230,6 +230,137 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/29/Python-catch-thread-exception/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="弈心">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="弈心">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/29/Python-catch-thread-exception/" itemprop="url">Python catch thread exception</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-29T19:08:47+08:00">
+                2018-11-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h2><p>在项目开发过程中，很多时候需要用到多线程方式实现，在python中，可以很方便的通过自带的threading包创建线程，简单的示例如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_thread_fun</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="string">"Hello, thread!"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    my_thread = threading.Thread(target=my_thread_fun)</span><br><span class="line">    my_thread.start()</span><br><span class="line">    my_thread.join()</span><br></pre></td></tr></table></figure>
+<p>以上，通过threading.Thread类创建一个线程，继而调用start函数运行该线程，最后通过join函数阻塞等待线程运行结束。<br><br>问题：若线程函数抛出异常，主线程能够捕获得到吗？<br><br>通过以下示例，进行验证：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_thread_fun</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">raise</span> Exception(<span class="string">"Hello, thread!"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        my_thread = threading.Thread(target=my_thread_fun)</span><br><span class="line">        my_thread.start()</span><br><span class="line">        my_thread.join()</span><br><span class="line">        print(<span class="string">"Thread exit normal."</span>)</span><br><span class="line">    <span class="keyword">except</span> Exception, e:</span><br><span class="line">        print(<span class="string">"Thread raise exception: %s"</span> % (str(e)))</span><br></pre></td></tr></table></figure>
+<p>该示例代码运行结果如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[pengjiaen@jiaen-peng ~]$ python ./test.py </span><br><span class="line">Exception in thread Thread-1:</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File "/usr/lib64/python2.7/threading.py", line 804, in __bootstrap_inner</span><br><span class="line">    self.run()</span><br><span class="line">  File "/usr/lib64/python2.7/threading.py", line 757, in run</span><br><span class="line">    self.__target(*self.__args, **self.__kwargs)</span><br><span class="line">  File "./test.py", line 4, in my_thread_fun</span><br><span class="line">    raise Exception("Hello, thread!")</span><br><span class="line">Exception: Hello, thread!</span><br><span class="line"></span><br><span class="line">Thread exit normal.</span><br><span class="line">[pengjiaen@jiaen-peng ~]$</span><br></pre></td></tr></table></figure>
+<p>很显然，主线程并没有捕获到线程抛出的异常信息。那么，究竟有没有方法能够获取到呢？答案是肯定的，那就是用自定义的类，继承threading的类，并重载他的run方法即可。</p>
+<h2 id="问题的解决"><a href="#问题的解决" class="headerlink" title="问题的解决"></a>问题的解决</h2><p>要实现捕获线程抛出的异常，必须用自定义的类，继承threading的类，并重载他的run方法，然后在自定义的run方法中抛出异常，即可在主线程中捕获到，接前面的例子，我们用自定义的线程类重写一遍：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExceptionThread</span><span class="params">(threading.Thread)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, group=None, target=None, name=None,</span></span></span><br><span class="line"><span class="function"><span class="params">                args=<span class="params">()</span>, kwargs=None, verbose=None)</span>:</span>  </span><br><span class="line">        super(ExceptionThread, self).__init__(</span><br><span class="line">            group, target, name,</span><br><span class="line">            args, kwargs, verbose)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> kwargs:</span><br><span class="line">            kwargs = &#123;&#125;</span><br><span class="line">        self._target = target</span><br><span class="line">        self._args = args</span><br><span class="line">        self._kwargs = kwargs</span><br><span class="line">        self._exc = <span class="keyword">None</span></span><br><span class="line">        self._ret = <span class="keyword">None</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            self._ret = self._target(*self._args, **self._kwargs)</span><br><span class="line">        <span class="keyword">except</span> Exception, e:</span><br><span class="line">            self._exc = e</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">join</span><span class="params">(self)</span>:</span>  </span><br><span class="line">        super(ExceptionThread, self).join()</span><br><span class="line">        <span class="keyword">if</span> self._exc:</span><br><span class="line">            <span class="keyword">raise</span> Exception(self._exc)</span><br><span class="line">        <span class="keyword">return</span> self._ret</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_thread_fun</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">raise</span> Exception(<span class="string">"Hello, thread!"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        my_thread = ExceptionThread(target=my_thread_fun)</span><br><span class="line">        my_thread.start()</span><br><span class="line">        my_thread.join()</span><br><span class="line">        print(<span class="string">"Thread exit normal."</span>)</span><br><span class="line">    <span class="keyword">except</span> Exception, e:</span><br><span class="line">        print(<span class="string">"Thread raise exception: %s"</span> % (str(e)))</span><br></pre></td></tr></table></figure>
+<p>运行结果如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[pengjiaen@jiaen-peng ~]$ python ./test.py </span><br><span class="line">Thread raise exception: Hello, thread!</span><br><span class="line">[pengjiaen@jiaen-peng ~]$</span><br></pre></td></tr></table></figure>
+<p>可以看到，主线程已经能够获取到线程抛出的异常了。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/10/31/openstack之USB重定向实现/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -468,7 +599,7 @@
 <p>拷贝平台默认的配置文件到内核源码的顶级目录：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# cp configs/kernel-3.10.0-`uname -m`.config .config</span><br></pre></td></tr></table></figure></p>
 <h3 id="修改内核配置"><a href="#修改内核配置" class="headerlink" title="修改内核配置"></a>修改内核配置</h3><p>执行make oldconfig命令<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# make oldconfig</span><br></pre></td></tr></table></figure></p>
 <p>此时，默认的内核配置已经生成，接下来可以进行自定义配置了，执行make menuconfig<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# make menuconfig</span><br></pre></td></tr></table></figure></p>
-<p>在make menuconfig修改完配置退出时，记得保存配置。<br><strong>重要：修改.config文件，在文件第一行添加如下一行(针对x86_64，其他平台可运行‘uname -m’命令查看平台的体系结构)</strong><br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> x86_64</span><br></pre></td></tr></table></figure></p>
+<p>在make menuconfig修改完配置退出时，记得保存配置。<br><strong>重要：修改.config文件，在文件第一行添加如下一行(针对x86_64，其他平台可运行‘uname -m’命令查看平台的体系结构)</strong><br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> x86_64</span></span><br></pre></td></tr></table></figure></p>
 <p>前面的#号不可少。<br>将修改后的配置文件保存<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@JeanP ~]# cp .config configs/kernel-3.10.0-`uname -m`.config</span><br><span class="line">[root@JeanP ~]# cp configs/* ~/rpmbuild/SOURCES/</span><br></pre></td></tr></table></figure></p>
 <h2 id="内核编译"><a href="#内核编译" class="headerlink" title="内核编译"></a>内核编译</h2><p><strong> 内核的 ABI </strong><br>CentOS 内核的其中一个特色就是它的应用程序二进制界面（ABI）会在整个产品生效期内保持一样。ABI 维持不变的好处，就是外置的内核模块在创建时不必与内核版本挂钩 —— 因此它们不必在新内核发行时被重新创建。这是追踪 ABI 内核模块组件的基础 —— 它们可以提供更新的驱动程序及其它文件系统等支持。</p>
 <p>为了维系 ABI 的一致性，原先的内核的 ABI 会被记录及存储在一个文件内。这个文件会在创建每个新内核时用来检查 kABI。如果新的内核被设置或修改至一个地步令它的 ABI 与先前的有差别，编译将会失败，并且会有信息表示 kABI 的一致性已被破坏。这时，内核创建者有两个选择：（一）重新设置新的内核，让它的 ABI 与原有的能互相吻合，因而可继续享受一致 ABI 所提供的好处；（二）在创建的过程中停止检查 kABI。在这两个选择之间，前者较为可取，但有时后者是唯一可行的方法。</p>
@@ -1563,135 +1694,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/19/第二题-二数之和/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="弈心">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="弈心">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/10/19/第二题-二数之和/" itemprop="url">第二题 二数之和</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-19T11:23:00+08:00">
-                2017-10-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="题目："><a href="#题目：" class="headerlink" title="题目："></a>题目：</h1><p>You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order and each of their nodes contain a single digit. Add the two numbers and return it as a linked list.</p>
-<p>You may assume the two numbers do not contain any leading zero, except the number 0 itself.</p>
-<p>给定两个非空的非负整数集的链表，现要求将两个链表元素相加，相加得到的数字以相反的顺序存储到新链表中返回，并保证每个节点包含一位数。</p>
-<p>你可以假设这两个数字不包含任何前导零，除了数字0本身。</p>
-<p>Input: (2 -&gt; 4 -&gt; 3) + (5 -&gt; 6 -&gt; 4)<br>Output: 7 -&gt; 0 -&gt; 8</p>
-<h1 id="思考："><a href="#思考：" class="headerlink" title="思考："></a>思考：</h1><p>题目不难，但有些细节需要考虑到，比如：</p>
-<p>1、两个链表长度不一样</p>
-<p>2、遍历完链表求和完毕后，如果最后和不为0，需要申请额外的节点进行保存。</p>
-<h1 id="代码实现："><a href="#代码实现：" class="headerlink" title="代码实现："></a>代码实现：</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for singly-linked list.</span></span><br><span class="line"><span class="comment"> * struct ListNode &#123;</span></span><br><span class="line"><span class="comment"> *     int val;</span></span><br><span class="line"><span class="comment"> *     struct ListNode *next;</span></span><br><span class="line"><span class="comment"> * &#125;;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function">struct ListNode* <span class="title">addTwoNumbers</span><span class="params">(struct ListNode* l1, struct ListNode* l2)</span> </span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ListNode</span>* <span class="title">p</span> = <span class="title">l1</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ListNode</span>* <span class="title">q</span> = <span class="title">l2</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ListNode</span>* <span class="title">last</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ListNode</span>* <span class="title">node</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span>(!l1 || !l2) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        sum += p-&gt;val + q-&gt;val;</span><br><span class="line">        p-&gt;val = sum % <span class="number">10</span>;</span><br><span class="line">        last = p;</span><br><span class="line">        p = p-&gt;next;</span><br><span class="line">        q = q-&gt;next;</span><br><span class="line">        sum = sum / <span class="number">10</span>;</span><br><span class="line">    &#125;<span class="keyword">while</span>(p &amp;&amp; q);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span>(p) &#123;</span><br><span class="line">        <span class="keyword">do</span>&#123;</span><br><span class="line">            sum += p-&gt;val;</span><br><span class="line">            p-&gt;val = sum % <span class="number">10</span>;</span><br><span class="line">            last = p;</span><br><span class="line">            p = p-&gt;next;</span><br><span class="line">            sum = sum / <span class="number">10</span>;</span><br><span class="line">        &#125;<span class="keyword">while</span>(p);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span>(q) &#123;</span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            sum += q-&gt;val;</span><br><span class="line">            q-&gt;val = sum % <span class="number">10</span>;</span><br><span class="line">            last-&gt;next = q;</span><br><span class="line">            last = q;</span><br><span class="line">            q = q-&gt;next;</span><br><span class="line">            sum = sum / <span class="number">10</span>;</span><br><span class="line">        &#125;<span class="keyword">while</span>(q);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (sum != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">do</span>&#123;</span><br><span class="line">            node = (struct ListNode*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(struct ListNode));</span><br><span class="line">            <span class="keyword">if</span>(!node) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            node-&gt;val = sum % <span class="number">10</span>;</span><br><span class="line">            sum = sum / <span class="number">10</span>;</span><br><span class="line">            node-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line">            last-&gt;next = node;</span><br><span class="line">            last = node;</span><br><span class="line">        &#125;<span class="keyword">while</span>(sum);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> l1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="验证结果"><a href="#验证结果" class="headerlink" title="验证结果"></a>验证结果</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Run Code Result: </span><br><span class="line">Your input </span><br><span class="line">[2,4,3]</span><br><span class="line">[5,6,4]</span><br><span class="line">Your answer </span><br><span class="line">[7,0,8]</span><br><span class="line">Expected answer </span><br><span class="line">[7,0,8]</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1742,7 +1744,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-count">24</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1755,7 +1757,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-count">14</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>
