@@ -240,6 +240,177 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/19/利用zlib解压http中gzip数据/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="弈心">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="弈心">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/10/19/利用zlib解压http中gzip数据/" itemprop="url">利用zlib解压http中gzip数据</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-19T11:22:31+08:00">
+                2017-10-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="什么是GZIP"><a href="#什么是GZIP" class="headerlink" title="什么是GZIP"></a>什么是GZIP</h1><p>GZIP是一种文件压缩算法，其应用范围广，GZIP压缩的比率往往在3到10倍，也就是本来90k大小的页面，采用压缩后实际传输的内容大小只有28至30K大小，这可以大大节省服务器的网络带宽，同时如果应用程序的响应足够快时，网站的速度瓶颈就转到了网络的传输速度上，因此内容压缩后就可以大大的提升页面的浏览速度。在传统的http协议中，通过采用gzip压缩技术，将传输的数据经过压缩后发送到对端进行解压缩操作，可以大大的减少web服务器与客户端的流量。http的gzip压缩是由WEB服务器和浏览器之间共同遵守的协议，也就是说WEB服务器和浏览器都必须支持该技术，而现在主流的浏览器都是支持的，包括IE、FireFox、谷歌浏览器、Opera 等。常见的WEB服务器有Apache 和IIS 等。</p>
+<h1 id="双方的协商过程如下"><a href="#双方的协商过程如下" class="headerlink" title="双方的协商过程如下"></a>双方的协商过程如下</h1><ol>
+<li>首先浏览器请求某个URL 地址，并在请求的头 (head) 中设置属性accept-encoding值为gzip，表明浏览器支持gzip这种压缩方式。</li>
+</ol>
+<p>（注：gzip是一种数据压缩格式，默认且目前仅使用deflate算法压缩data部分。）</p>
+<ol start="2">
+<li><p>WEB服务器接收到请求后判断浏览器是否支持压缩，如果支持就传送压缩后的响应内容，否则传送不经过压缩的内容；</p>
+</li>
+<li><p>浏览器获取响应内容后，判断内容是否被压缩，如果是则解压缩，然后显示响应页面的内容。（IE5.5以上才支持gzip）</p>
+</li>
+</ol>
+<h1 id="HTTP报文分析"><a href="#HTTP报文分析" class="headerlink" title="HTTP报文分析"></a>HTTP报文分析</h1><p>在浏览器收到web服务器的回复时，通过http头部中的Content-Encoding属性，值为gzip，则表明此数据报文是经过gzip压缩的。若http头部中，还包含Transfer-Encoding属性，且其值为trunk时，表明此数据报文是经过gzip压缩后，再封装成trunk格式，一段一段发送过来的，此时，其数据包大小不定，一直到接收到终止trunk为止。</p>
+<h1 id="获取HTTP报文的压缩数据"><a href="#获取HTTP报文的压缩数据" class="headerlink" title="获取HTTP报文的压缩数据"></a>获取HTTP报文的压缩数据</h1><ol>
+<li>不带chunk:</li>
+</ol>
+<p>当获取到不带chunk的压缩数据报文，此时http除去头部信息后，剩下的字节数都为待解压的gzip数据。</p>
+<ol start="2">
+<li>带chunk:</li>
+</ol>
+<p>当获取到带chunk的压缩数据报文，此时http除去头部信息后,剩下的字节都封装成chunk格式，通过解析一段一段的chunk，最终将里面的数据封装成为带解压的gzip数据。</p>
+<p>chunk数据格式为：size\r\ndata\r\n，每个chunk都是以size开头，标示该chunk数据域的长度，size与data之间用\r\n隔开，最后再以\r\n标示该chunk的边界。</p>
+<h1 id="解压http报文的gzip数据"><a href="#解压http报文的gzip数据" class="headerlink" title="解压http报文的gzip数据"></a>解压http报文的gzip数据</h1><p>要解压http报文的gzip数据，必须利用zlib库进行解压，解压方式可分为：</p>
+<ol>
+<li>整体解压：</li>
+</ol>
+<p>待http报文全部接收完成，再获取其中的gzip数据，将整段gip数据利用zlib库的inflate函数进行解压。</p>
+<ol start="2">
+<li>分段解压：</li>
+</ol>
+<p>不等http报文全部接收完成，将当前获取的gzip数据，利用zlib库的inflate函数进行解压。</p>
+<p>注：分段解压时，必须保证先后顺序，且分段间必须连续无间断方可。</p>
+<h1 id="利用ZLIB库解压HTTP报文中的GZIP数据"><a href="#利用ZLIB库解压HTTP报文中的GZIP数据" class="headerlink" title="利用ZLIB库解压HTTP报文中的GZIP数据"></a>利用ZLIB库解压HTTP报文中的GZIP数据</h1><p>在使用zlib解压gzip数据时，每个完整的gzip数据都对应一个z_stream结构，其具体内容如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">z_stream_s</span> &#123;</span></span><br><span class="line"> </span><br><span class="line">    z_const Bytef *next_in;     <span class="comment">/* next input byte */</span></span><br><span class="line"> </span><br><span class="line">    uInt     avail_in;  <span class="comment">/* number of bytes available at next_in */</span></span><br><span class="line"> </span><br><span class="line">    uLong    total_in;  <span class="comment">/* total number of input bytes read so far */</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    Bytef    *next_out; <span class="comment">/* next output byte should be put there */</span></span><br><span class="line"> </span><br><span class="line">    uInt     avail_out; <span class="comment">/* remaining free space at next_out */</span></span><br><span class="line"> </span><br><span class="line">    uLong    total_out; <span class="comment">/* total number of bytes output so far */</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    z_const <span class="keyword">char</span> *msg;  <span class="comment">/* last error message, NULL if no error */</span></span><br><span class="line"> </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">internal_state</span> <span class="title">FAR</span> *<span class="title">state</span>;</span> <span class="comment">/* not visible by applications */</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    alloc_func zalloc;  <span class="comment">/* used to allocate the internal state */</span></span><br><span class="line"> </span><br><span class="line">    free_func  zfree;   <span class="comment">/* used to free the internal state */</span></span><br><span class="line"> </span><br><span class="line">    voidpf     opaque;  <span class="comment">/* private data object passed to zalloc and zfree */</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    <span class="keyword">int</span>     data_type;  <span class="comment">/* best guess about the data type: binary or text */</span></span><br><span class="line"> </span><br><span class="line">    uLong   adler;      <span class="comment">/* adler32 value of the uncompressed data */</span></span><br><span class="line"> </span><br><span class="line">    uLong   reserved;   <span class="comment">/* reserved for future use */</span></span><br><span class="line"> </span><br><span class="line">&#125; z_stream;</span><br></pre></td></tr></table></figure>
+<p>解压前准备：需要调用inflateInit2对z_stream进行初始化操作。</p>
+<p>解压中：必须保证实时更新next_in、next_out、 avail_out等字段，一直到解压完毕为止。</p>
+<p>解压完毕：调用inflateEnd进行解压终止操作。</p>
+<h1 id="GUNZIP实现"><a href="#GUNZIP实现" class="headerlink" title="GUNZIP实现"></a>GUNZIP实现</h1><ol>
+<li>数据结构</li>
+</ol>
+<p>A. 保存解压状态、解压结果的结构体http_gunzip_ctx_t，各字段如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">http_gunzip_buf_t</span>         *out;     <span class="comment">/*保存当前解压输出的数据的链表头节点指针*/</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">http_gunzip_buf_t</span>        *last_out;  <span class="comment">/*保存当前解压输出的数据的链表尾节点指针*/</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">      <span class="keyword">char</span> *out_buf;                     <span class="comment">/*组装当前解压出的数据的指针*/</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> out_buf_len;         <span class="comment">/*当前解压出的数据总长度*/</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> total_out_len;        <span class="comment">/*从开始到现在解压出的数据总长度*/</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> started;             <span class="comment">/*解压开始标志*/</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> flush;               <span class="comment">/*解压的flush模式标志*/</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> redo;               <span class="comment">/*重新解压标志*/</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> done;               <span class="comment">/*解压完成标志*/</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> nomem;             <span class="comment">/*解压中内存不足标志*/</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    z_stream zstream;                 <span class="comment">/*zlib解压所需要的数据结构*/</span></span><br><span class="line"></span><br><span class="line">&#125; <span class="keyword">http_gunzip_ctx_t</span>;</span><br></pre></td></tr></table></figure></p>
+<p>B.保存解压结果的链表，根据解压的输出字节大小，进行扩展。</p>
+<p>在gunzip中，将当前解压状态保存在http_gunzip_ctx_t结构中，链表节点中各字段如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">http_gunzip_buf</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">char</span> *buf;                        <span class="comment">/*保存解压输出的数据*/</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> buf_len;            <span class="comment">/*申请的buf的总长度*/</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">http_gunzip_buf</span>* <span class="title">next</span>;</span>       <span class="comment">/*指向下一个节点的指针*/</span></span><br><span class="line"></span><br><span class="line">&#125; <span class="keyword">http_gunzip_buf_t</span>;</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>接口定义</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">A、初始化</span><br><span class="line"> </span><br><span class="line"><span class="comment">/*参数：ctx 为gunzip所需的http_gunzip_ctx_t结构</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment">返回值：0：成功，1：失败*/</span></span><br><span class="line"> </span><br><span class="line">      <span class="function"><span class="keyword">int</span> <span class="title">http_gunzip_inflate_init</span><span class="params">(<span class="keyword">http_gunzip_ctx_t</span> *ctx)</span></span>;</span><br><span class="line">B、解压</span><br><span class="line"> </span><br><span class="line"><span class="comment">/*参数：</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment">     ctx 为gunzip所需的http_gunzip_ctx_t结构</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment">     zdata为待解压的数据</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment">     zdata_size为待解压数据的长度</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment">     uzdata为解压输出的数据</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment">     uzdata_size为解压输出数据的长度</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment">返回值：0：成功，1：失败*/</span></span><br><span class="line"> </span><br><span class="line">     <span class="function"><span class="keyword">int</span> <span class="title">http_gunzip_inflate</span><span class="params">(<span class="keyword">http_gunzip_ctx_t</span> *ctx,</span></span></span><br><span class="line"><span class="function"><span class="params"> </span></span></span><br><span class="line"><span class="function"><span class="params">             <span class="keyword">char</span>* zdata, <span class="keyword">long</span> zdata_size,</span></span></span><br><span class="line"><span class="function"><span class="params"> </span></span></span><br><span class="line"><span class="function"><span class="params">             <span class="keyword">char</span>** uzdata, <span class="keyword">unsigned</span> <span class="keyword">long</span>* uzdata_size)</span></span>;</span><br><span class="line"> </span><br><span class="line">C、退出</span><br><span class="line"> </span><br><span class="line"><span class="comment">/*参数：ctx 为gunzip所需的http_gunzip_ctx_t结构</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment">返回值：无*/</span></span><br><span class="line"> </span><br><span class="line">     <span class="function"><span class="keyword">void</span> <span class="title">http_gunzip_inflate_exit</span><span class="params">(<span class="keyword">http_gunzip_ctx_t</span> *ctx)</span></span>;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>接口使用与说明</li>
+</ol>
+<p>先调用初始化接口，将http_gunzip_ctx_t结构进行初始化，继而调用解压函数，即可获取解压输出结果，当所有数据解压完毕，调用退出接口进行相关的清理操作。</p>
+<p>注意：解压接口中，uzdata为解压输出结果，用户获取输出，使用完毕之后，必须调用free函数，进行内存回收处理。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/19/Redis数据结构之链表实现——Adlist/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -857,7 +1028,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">24</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -870,7 +1041,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-count">15</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>
