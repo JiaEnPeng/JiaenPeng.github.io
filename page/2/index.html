@@ -240,6 +240,127 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/19/解决buildroot编译缺失Perl-ExtUtils模块的问题/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="弈心">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="弈心">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/10/19/解决buildroot编译缺失Perl-ExtUtils模块的问题/" itemprop="url">解决buildroot编译缺失Perl ExtUtils模块的问题</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-19T11:23:10+08:00">
+                2017-10-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>  一不小心，将服务器的perl删除了，结果导致很多软件，以及buildroot编译环境都用不了，重新安装perl之后，软件已恢复使用，但buildroot始终报错，错误信息如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Your Perl installation is not complete enough; at least the following</span><br><span class="line">modules are missing:</span><br><span class="line"></span><br><span class="line">	 ExtUtils::MakeMaker</span><br><span class="line"></span><br><span class="line">make: *** [core-dependencies] Error 1</span><br></pre></td></tr></table></figure></p>
+<h2 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h2><p>安装ExtUtils-MakeMaker模块即可解决，安装方法如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install perl-ExtUtils-MakeMaker</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/19/第六题-锯齿状字符串转换/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -1500,178 +1621,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/19/怎样在Buildroot中添加自定义的package/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="弈心">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="弈心">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/10/19/怎样在Buildroot中添加自定义的package/" itemprop="url">怎样在Buildroot中添加自定义的package</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-19T11:22:38+08:00">
-                2017-10-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Buildroot介绍"><a href="#Buildroot介绍" class="headerlink" title="Buildroot介绍"></a>Buildroot介绍</h2><h3 id="下面是官方介绍"><a href="#下面是官方介绍" class="headerlink" title="下面是官方介绍"></a>下面是官方介绍</h3><p>Buildroot is a tool that simplifies and automates the process of building a complete Linux system for an embedded system, using cross-compilation.</p>
-<p>In order to achieve this, Buildroot is able to generate a cross-compilation toolchain, a root filesystem, a Linux kernel image and a bootloader for your target. Buildroot can be used for any combination of these options, independently (you can for example use an existing cross-compilation toolchain, and build only your root filesystem with Buildroot).</p>
-<p>Buildroot is useful mainly for people working with embedded systems. Embedded systems often use processors that are not the regular x86 processors everyone is used to having in his PC. They can be PowerPC processors, MIPS processors, ARM processors, etc.</p>
-<p>Buildroot supports numerous processors and their variants; it also comes with default configurations for several boards available off-the-shelf. Besides this, a number of third-party projects are based on, or develop their BSP  or SDK on top of Buildroot.</p>
-<p>Buildroot是一种工具，可简化并自动化使用交叉编译构建嵌入式系统的完整Linux系统的过程。</p>
-<p>为了实现这一点，Buildroot能够为您的目标生成交叉编译工具链，根文件系统，Linux内核映像和引导加载程序。 Buildroot可以独立使用这些选项的任意组合（您可以使用现有的交叉编译工具链，并使用Buildroot构建您的根文件系统）。</p>
-<p>Buildroot主要用于使用嵌入式系统的人员。嵌入式系统通常使用的处理器不是所有人习惯在其PC中使用的常规x86处理器。它们可以是PowerPC处理器，MIPS处理器，ARM处理器等。</p>
-<p>Buildroot支持众多处理器及其变体;它还具有可用于现成的多个板的默认配置。除此之外，还有一些第三方项目基于或开发了其在Buildroot之上的BSP或SDK。</p>
-<h2 id="获取Buildroot源码"><a href="#获取Buildroot源码" class="headerlink" title="获取Buildroot源码"></a>获取Buildroot源码</h2><p>Buildroot下载(<a href="https://buildroot.org/downloads/" target="_blank" rel="noopener">https://buildroot.org/downloads/</a>)</p>
-<h2 id="Buildroot源码目录结构"><a href="#Buildroot源码目录结构" class="headerlink" title="Buildroot源码目录结构"></a>Buildroot源码目录结构</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">+-- arch/ 	存放体系相关的配置文件</span><br><span class="line">+-- board/  	存放各类型具体芯片相关的配置文件</span><br><span class="line">+-- boot/	存放各类型具体芯片相关的系统引导程序的配置文件</span><br><span class="line">+-- configs/	一些配置</span><br><span class="line">+-- dl/		package下载存放的路径</span><br><span class="line">+-- docs/	存放文档</span><br><span class="line">+-- fs/		存放文件系统相关配置</span><br><span class="line">+-- linux/  	存放linux相关配置</span><br><span class="line">+-- output/ 	编译输出路径</span><br><span class="line">+-- package/	存放各软件包</span><br><span class="line">+-- support/	存放编译过程中所依赖的包	</span><br><span class="line">+-- system/	存放跟系统相关的配置（包括原始的根文件系统）</span><br><span class="line">+-- toolchain/	存放工具链相关</span><br></pre></td></tr></table></figure>
-<h2 id="Buildroot简单使用"><a href="#Buildroot简单使用" class="headerlink" title="Buildroot简单使用"></a>Buildroot简单使用</h2><p><strong>重要提示</strong>：你应当以普通用户进行编译操作。没有必要使用root来配置和使用Buildroot。通过以普通用户身份运行所有命令，可以在编译和安装过程中保护系统免受软件包性能的影响。</p>
-<p>使用Buildroot的第一步是创建一个配置。 Buildroot有一个很好的配置工具，类似于您可以在Linux内核或BusyBox中找到的配置工具。</p>
-<p>从buildroot目录运行</p>
-<p> $ make menuconfig<br>对于原来基于curses的配置器，或者</p>
-<p> $ make nconfig<br>对于新的基于curses的配置器，或者</p>
-<p> $ make xconfig<br>对于基于Qt的配置器，或者</p>
-<p> $ make gconfig<br>为基于GTK的配置器。</p>
-<p>所有这些“make”命令都需要构建配置实用程序（包括接口），因此您可能需要为配置实用程序使用的相关库安装“开发”软件包。</p>
-<p>配置完成后，配置工具将生成包含整个配置的.config文件。该文件将被顶级Makefile读取。</p>
-<p>要开始构建过程，只需运行：</p>
-<p> $ make<br><strong>注意</strong>：不应该在Buildroot中使用make -jN：目前不支持顶级并行make。而是使用BR2_JLEVEL选项来告诉Buildroot，使用make -jN来运行每个包的编译。</p>
-<p>这些命令，使menuconfig | nconfig | gconfig | xconfig和make是基本的命令，可以轻松快速地生成需要的映像，以及启用的所有功能和应用程序。</p>
-<h2 id="在Buildroot中添加自己的包"><a href="#在Buildroot中添加自己的包" class="headerlink" title="在Buildroot中添加自己的包"></a>在Buildroot中添加自己的包</h2><p>Buildroot自身存放了足够多的包，在源码的package目录下，每个包都包含了相关的配置文件，当配置选中时，Buildroot将通过该包的配置文件，选择从Internet或本地获取包源码，并进行编译。因此，你可以通过配置，为你的目标包含所需要的包即可。有时，我们想为目标添加我们自己的包，这时候，我们就得在package目录下添加包的相关配置了。下面，以helloworld包为例，简单演示如何将helloworld包添加到Buildroot中。</p>
-<h3 id="helloworld包源码及路径"><a href="#helloworld包源码及路径" class="headerlink" title="helloworld包源码及路径"></a>helloworld包源码及路径</h3><p>通过以下操作，创建我们的helloworld包：</p>
-<ol>
-<li>在Buildroot源码顶级目录新建我们自己的目录，命名为：mywork</li>
-<li>在mywork目录下新建helloworld目录</li>
-<li>在helloworld目录下新建helloworld.c文件</li>
-<li>编辑helloworld.c，保存如下：</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line"></span><br><span class="line">int main(int argc, char** argv) </span><br><span class="line">&#123;</span><br><span class="line">	printf(&quot;Hello world!\n&quot;);</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>此时，Buildroot源码树变为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">+-- arch/ 	存放体系相关的配置文件</span><br><span class="line">+-- board/  	存放各类型具体芯片相关的配置文件</span><br><span class="line">+-- boot/	存放各类型具体芯片相关的系统引导程序的配置文件</span><br><span class="line">+-- configs/	一些配置</span><br><span class="line">+-- dl/		package下载存放的路径</span><br><span class="line">+-- docs/	存放文档</span><br><span class="line">+-- fs/		存放文件系统相关配置</span><br><span class="line">+-- linux/  	存放linux相关配置</span><br><span class="line">+-- mywork/	存放我们自定义的相关包</span><br><span class="line">|   +-- helloworld/	helloworld包</span><br><span class="line">|       +-- helloworld.c helloworld包源代码文件</span><br><span class="line">+-- output/ 	编译输出路径</span><br><span class="line">+-- package/	存放各软件包</span><br><span class="line">+-- support/	存放编译过程中所依赖的包	</span><br><span class="line">+-- system/	存放跟系统相关的配置（包括原始的根文件系统）</span><br><span class="line">+-- toolchain/	存放工具链相关</span><br></pre></td></tr></table></figure>
-<h3 id="为helloworld包添加配置文件"><a href="#为helloworld包添加配置文件" class="headerlink" title="为helloworld包添加配置文件"></a>为helloworld包添加配置文件</h3><ol>
-<li>通过上面的介绍可知，要将我们的helloworld包编译进我们的目标中，需要在源码的package目录中添加相应的配置文件才行，因此，在package目录下，新建helloworld文件夹，并在helloworld文件夹下，创建Config.in与helloworld.mk文件，并编辑这两个文件，使其内容分别为：<br><strong>Config.in</strong>文件内容：</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">menu &quot;Hello World&quot;</span><br><span class="line">        config BR2_PACKAGE_HELLOWORLD</span><br><span class="line">            bool &quot;helloworld&quot;</span><br><span class="line">            default n</span><br><span class="line">            help</span><br><span class="line">                Hello world.</span><br><span class="line"></span><br><span class="line">        config BR2_PACKAGE_HELLOWORLD_DIR</span><br><span class="line">            string &quot;Directory name for Hello World code&quot;</span><br><span class="line">            depends on BR2_PACKAGE_HELLOWORLD</span><br><span class="line">            default &quot;helloworld&quot;</span><br><span class="line"></span><br><span class="line">endmenu</span><br></pre></td></tr></table></figure>
-<p>Config.in文件的主要作用是使得在Buildroot的配置菜单中显示出我们新加的东西。在这里，我们定义了两个变量，一个Bool的BR2_PACKAGE_HELLOWORLD，表示是否编译Helloworld；一个字串的BR2_PACKAGE_HELLOWORLD_DIR，表示main.c所在的文件夹。</p>
-<p><strong>helloworld.mk</strong>文件内容：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">HELLOWORLD_VERSION:= 1.0</span><br><span class="line">HELLOWORLD_SITE:= $(BR2_MYWORK_OBJECT_DIR)/$(BR2_PACKAGE_HELLOWORLD_DIR)</span><br><span class="line">HELLOWORLD_SITE_METHOD:=local</span><br><span class="line">HELLOWORLD_INSTALL_TARGET:=YES</span><br><span class="line"></span><br><span class="line">define HELLOWORLD_BUILD_CMDS</span><br><span class="line">        $(MAKE) CC=&quot;$(TARGET_CC)&quot; LD=&quot;$(TARGET_LD)&quot; -C $(@D) all</span><br><span class="line">endef</span><br><span class="line"></span><br><span class="line">define HELLOWORLD_INSTALL_TARGET_CMDS</span><br><span class="line">        $(MAKE) INSTALL=&quot;$(INSTALL)&quot; DESTDIR=&quot;$(TARGET_DIR)&quot;  -C $(@D) install</span><br><span class="line">endef</span><br><span class="line"></span><br><span class="line">$(eval $(generic-package))</span><br></pre></td></tr></table></figure>
-<p>Helloworld.mk定义了模块的代码获取方式、编译方式和安装方式。<br>HELLOWORLD_VERSION表示版本；<br>HELLOWORLD_SITE表示源码位置；<br>HELLOWORLD_SITE_METHOD表示源码获取方式，由于是本地代码，所以是local；<br>HELLOWORLD_INSTALL_TARGET表示是否安装到嵌入式目标系统中；<br>HELLOWORLD_BUILD_CMDS表示编译方式；<br>HELLOWORLD_INSTALL_TARGET_CMDS表示安装方式；</p>
-<ol start="2">
-<li>要将helloworld编译进我们的目标中，还需要修改package目录下的Config.in文件，使其包含我们的helloworld包，为此，我们在其中添加如下代码：</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">menu &quot;My Work&quot;</span><br><span class="line">    config BR2_MYWORK_OBJECT_DIR</span><br><span class="line">      string  &quot;My work Directory&quot;</span><br><span class="line">        default &quot;mywork&quot;</span><br><span class="line">      help</span><br><span class="line">        path to my work</span><br><span class="line">    source &quot;package/helloworld/Config.in&quot;</span><br><span class="line">endmenu</span><br></pre></td></tr></table></figure>
-<ol start="3">
-<li>为我们的helloworld包创建Makefile，在Buildroot源码的mywork/helloworld目录下创建Makefile文件,并修改使其内容为：</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">all: helloworld</span><br><span class="line"></span><br><span class="line">helloworld.o:helloworld.c</span><br><span class="line">	$(CC) -c helloworld.c</span><br><span class="line"></span><br><span class="line">helloworld: helloworld.o</span><br><span class="line">	$(CC) -o helloworld helloworld.o</span><br><span class="line"></span><br><span class="line">clean:</span><br><span class="line">	rm -rf *.o</span><br><span class="line">	rm -rf helloworld</span><br><span class="line"></span><br><span class="line">install:</span><br><span class="line">	$(INSTALL) -D -m 0755 helloworld $(TARGET_DIR)/usr/bin</span><br></pre></td></tr></table></figure>
-<p>至此，所有的配置都已完成，Buildroot源码树变为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">+-- arch/ 	存放体系相关的配置文件</span><br><span class="line">+-- board/  	存放各类型具体芯片相关的配置文件</span><br><span class="line">+-- boot/	存放各类型具体芯片相关的系统引导程序的配置文件</span><br><span class="line">+-- configs/	一些配置</span><br><span class="line">+-- dl/		package下载存放的路径</span><br><span class="line">+-- docs/	存放文档</span><br><span class="line">+-- fs/		存放文件系统相关配置</span><br><span class="line">+-- linux/  	存放linux相关配置</span><br><span class="line">+-- mywork/	存放我们自定义的相关包</span><br><span class="line">|   +-- helloworld/	helloworld包</span><br><span class="line">|       +-- helloworld.c helloworld包源代码文件</span><br><span class="line">|       +-- Makefile		helloworld包的Makefile</span><br><span class="line">+-- output/ 	编译输出路径</span><br><span class="line">+-- package/	存放各软件包</span><br><span class="line">|   +-- Config.in 	定义所有包的菜单配置</span><br><span class="line">|   +-- helloworld/	包含helloworld包相关配置</span><br><span class="line">|       +-- Config.in	定义helloworld包的菜单配置</span><br><span class="line">|       +-- helloworld.mk	定义helloworld包的编译方式</span><br><span class="line">+-- support/	存放编译过程中所依赖的包	</span><br><span class="line">+-- system/	存放跟系统相关的配置（包括原始的根文件系统）</span><br><span class="line">+-- toolchain/	存放工具链相关</span><br></pre></td></tr></table></figure>
-<p>现在，我们可以通过make menuconfig选中我们的helloworld包进行配置了，通过make命令，就可以编译出我们的helloworld包了，编译完成后，可以在Buildroot的output/tackage/usr/bin/目录下找到我们的helloworld文件。</p>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>Buildroot是一套强大的工具，使用它，你会从中体会到很多很多的乐趣。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1722,7 +1671,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">26</span>
+                  <span class="site-state-item-count">27</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1772,7 +1721,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
