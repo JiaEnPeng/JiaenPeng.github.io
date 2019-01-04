@@ -259,7 +259,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/01/04/用Python获取比应首页背景高清图片/" itemprop="url">用Python获取比应首页背景高清图片</a></h1>
+                <a class="post-title-link" href="/2019/01/04/用Python获取比应首页背景高清图片/" itemprop="url">用Python获取必应首页背景高清图片</a></h1>
         
 
         <div class="post-meta">
@@ -311,16 +311,16 @@
       
         
           
-            <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>在用比应搜索时，发现其背景图片都是高清无水印的大图，用来做桌面背景相当不错，于是想，能不能通过程序自动将图片下载到本地呢。</p>
-<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>要获取比应图片，首先必须得到背景图片的url，然后才能通过url将图片下载到本地。大致的流程如下：</p>
+            <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>在用必应搜索时，发现其背景图片都是高清无水印的大图，用来做桌面背景相当不错，于是想，能不能通过程序自动将图片下载到本地呢。</p>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>要获取必应图片，首先必须得到背景图片的url，然后才能通过url将图片下载到本地。大致的流程如下：</p>
 <ol>
-<li>获取比应首页的源码</li>
+<li>获取必应首页的源码</li>
 <li>通过首页源码获取背景图片的URL</li>
 <li>通过URL下载图片到本地</li>
 </ol>
-<h2 id="获取首页源码"><a href="#获取首页源码" class="headerlink" title="获取首页源码"></a>获取首页源码</h2><p>获取首页源码比较简单，只需通过python构造http请求，以获取比应首页即可，大致代码如下：</p>
+<h2 id="获取首页源码"><a href="#获取首页源码" class="headerlink" title="获取首页源码"></a>获取首页源码</h2><p>获取首页源码比较简单，只需通过python构造http请求，以获取必应首页即可，大致代码如下：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#获取国内版壁纸</span></span><br><span class="line">request = urllib2.Request(<span class="string">"https://cn.bing.com?FORM=BEHPTB"</span>)</span><br><span class="line">response = urllib2.urlopen(request)</span><br><span class="line">cn_bing_html = response.read()</span><br></pre></td></tr></table></figure>
-<p>注：比应首页分为国内版与国际版，其中国内版的地址为：<a href="https://cn.bing.com?FORM=BEHPTB" target="_blank" rel="noopener">https://cn.bing.com?FORM=BEHPTB</a><br>而国际版的首页为：<a href="https://cn.bing.com?FORM=BEHPTB&amp;ensearch=1" target="_blank" rel="noopener">https://cn.bing.com?FORM=BEHPTB&amp;ensearch=1</a></p>
+<p>注：必应首页分为国内版与国际版，其中国内版的地址为：<a href="https://cn.bing.com?FORM=BEHPTB" target="_blank" rel="noopener">https://cn.bing.com?FORM=BEHPTB</a><br>而国际版的首页为：<a href="https://cn.bing.com?FORM=BEHPTB&amp;ensearch=1" target="_blank" rel="noopener">https://cn.bing.com?FORM=BEHPTB&amp;ensearch=1</a></p>
 <h2 id="获取背景图片URL地址"><a href="#获取背景图片URL地址" class="headerlink" title="获取背景图片URL地址"></a>获取背景图片URL地址</h2><p>通过源码提取背景图片的URL稍微麻烦点，需要借助python的正则表达式模块进行，通过正则表达式，将格式为：</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">id</span>=<span class="string">"bgImg"</span> <span class="attr">src</span>=<span class="string">"/az/hprichbg/rb/LadyBugFrost_EN-CN8032457598_1920x1080.jpg"</span> <span class="attr">style</span>=<span class="string">"display:none"</span> <span class="attr">onload</span>=<span class="string">"sc_lI();"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
 <p> 中的/az/hprichbg/rb/LadyBugFrost_EN-CN8032457598_1920x1080.jpg图片地址提取出来。大致的实现代码如下：</p>
